@@ -34,6 +34,8 @@ import type { Dispatch, SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
 import CreateAppointmentDialog, { type NewAppointmentPayload } from "./CreateAppointmentDialog";
 import { PlusCircle } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ViewAppointmentsDialogProps {
   isOpen: boolean;
@@ -49,10 +51,10 @@ export interface Appointment {
   specialty: string;
   status: string;
   notes?: string;
-  patientName?: string; // Adicionado para admin
+  patientName?: string; 
 }
 
-const initialMockAppointments: Appointment[] = [
+export const initialMockAppointments: Appointment[] = [
   { id: "1", date: "2024-12-25", time: "10:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Confirmado", notes: "Paciente com histórico de pressão alta.", patientName: "Cliente Logado" },
   { id: "2", date: "2025-01-10", time: "14:30", doctor: "Dra. Modelo", specialty: "Cardiologia", status: "Agendado", patientName: "Cliente Logado" },
   { id: "3", date: "2024-11-20", time: "09:00", doctor: "Dr. Teste", specialty: "Ortopedia", status: "Realizado", notes: "Raio-X coluna.", patientName: "Cliente Logado" },
@@ -60,6 +62,9 @@ const initialMockAppointments: Appointment[] = [
   { id: "5", date: "2025-02-01", time: "11:00", doctor: "Dra. Nova", specialty: "Dermatologia", status: "Agendado", notes: "Verificar mancha na pele.", patientName: "Cliente Logado" },
   { id: "6", date: "2025-01-05", time: "09:30", doctor: "Dr. House", specialty: "Clínica Geral", status: "Agendado", patientName: "Paciente Alfa (Admin View)" },
   { id: "7", date: "2025-01-08", time: "15:00", doctor: "Dra. Grey", specialty: "Pediatria", status: "Confirmado", notes: "Consulta de rotina.", patientName: "Paciente Beta (Admin View)" },
+  // Add more diverse future dates for testing client next appointment summary
+  { id: "8", date: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split('T')[0], time: "11:00", doctor: "Dr. Futuro", specialty: "Clínica Geral", status: "Agendado", patientName: "Cliente Logado" },
+  { id: "9", date: new Date(new Date().setDate(new Date().getDate() + 14)).toISOString().split('T')[0], time: "15:00", doctor: "Dra. Futura", specialty: "Cardiologia", status: "Confirmado", patientName: "Cliente Logado" },
 ];
 
 export default function ViewAppointmentsDialog({ 
@@ -116,7 +121,7 @@ export default function ViewAppointmentsDialog({
                 specialty: data.specialty, 
                 doctor: data.doctor, 
                 notes: data.notes,
-                patientName: userRole === 'admin' ? data.patientName || appt.patientName : appt.patientName,
+                patientName: userRole === 'admin' ? data.patientName || appt.patientName : appt.patientName, // Keep existing if client
               } 
             : appt
         )
@@ -132,7 +137,7 @@ export default function ViewAppointmentsDialog({
         status: "Agendado", 
         patientName: userRole === 'admin' ? data.patientName || "Paciente Novo (Admin)" : "Cliente Logado",
       };
-      setAppointments(prevAppointments => [newAppointment, ...prevAppointments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())); 
+      setAppointments(prevAppointments => [newAppointment, ...prevAppointments].sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())); 
       toast({
         title: "Agendamento Criado!",
         description: "Seu novo agendamento foi adicionado à lista.",
@@ -145,6 +150,10 @@ export default function ViewAppointmentsDialog({
     setEditingAppointmentData(null); 
     setIsCreateAppointmentOpen(true);
   }
+
+  const filteredAppointments = userRole === 'admin' 
+    ? appointments 
+    : appointments.filter(appt => appt.patientName === "Cliente Logado");
 
   return (
     <>
@@ -171,12 +180,10 @@ export default function ViewAppointmentsDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {appointments
-                  .filter(appt => userRole === 'admin' || appt.patientName === "Cliente Logado") // Filtra para cliente
-                  .map((appt) => (
+                {filteredAppointments.map((appt) => (
                   <TableRow key={appt.id}>
                     {userRole === 'admin' && <TableCell>{appt.patientName || "N/A"}</TableCell>}
-                    <TableCell>{new Date(appt.date + 'T00:00:00').toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>{format(parseISO(appt.date), "dd/MM/yyyy", { locale: ptBR })}</TableCell>
                     <TableCell>{appt.time}</TableCell>
                     <TableCell>{appt.doctor}</TableCell>
                     <TableCell>{appt.specialty}</TableCell>
@@ -246,4 +253,3 @@ export default function ViewAppointmentsDialog({
     </>
   );
 }
-

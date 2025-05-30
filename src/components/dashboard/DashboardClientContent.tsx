@@ -11,10 +11,12 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import EditProfileDialog from "./EditProfileDialog";
-import ViewAppointmentsDialog from "./ViewAppointmentsDialog";
+import ViewAppointmentsDialog, { type Appointment, initialMockAppointments } from "./ViewAppointmentsDialog";
 import ViewExamResultDialog, { type MockExamResult } from "./ViewExamResultDialog";
 import ViewMedicalHistoryDialog from "./ViewMedicalHistoryDialog";
 import ViewBillingHistoryDialog, { type Invoice } from "./ViewBillingHistoryDialog";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 
 interface UserProfile {
@@ -54,6 +56,7 @@ const mockLatestInvoiceClient: Invoice = {
   amount: 150.00,
   status: "Paga",
   description: "Consulta Clínica Geral (Cliente)",
+  patientName: "Cliente Logado"
 };
 
 const mockLatestInvoiceAdmin: Invoice = {
@@ -63,6 +66,7 @@ const mockLatestInvoiceAdmin: Invoice = {
   amount: 300.00,
   status: "Pendente",
   description: "Consulta Especializada (Paciente B)",
+  patientName: "Paciente B"
 };
 
 
@@ -74,7 +78,8 @@ function DashboardContentInternal() {
   const [isViewExamResultOpen, setIsViewExamResultOpen] = useState(false);
   const [isViewMedicalHistoryOpen, setIsViewMedicalHistoryOpen] = useState(false);
   const [isViewBillingHistoryOpen, setIsViewBillingHistoryOpen] = useState(false);
-  const [userRole, setUserRole] = useState<'cliente' | 'admin'>('cliente'); 
+  const [userRole, setUserRole] = useState<'cliente' | 'admin'>('cliente');
+  const [clientNextAppointmentSummary, setClientNextAppointmentSummary] = useState<Appointment | null>(null);
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "Nome do Paciente Exemplo",
@@ -98,15 +103,26 @@ function DashboardContentInternal() {
       }));
       setCurrentExamData(mockExamDataAdmin);
       setCurrentInvoiceData(mockLatestInvoiceAdmin);
+      setClientNextAppointmentSummary(null); // Admin doesn't need this specific summary
     } else {
       setUserRole('cliente');
       setUserProfile(prev => ({
         ...prev,
         name: "Nome do Paciente Exemplo",
-        email: "paciente@exemplo.com",
+        email: "cliente@exemplo.com", // Correct email for client
       }));
       setCurrentExamData(mockExamDataClient);
       setCurrentInvoiceData(mockLatestInvoiceClient);
+
+      // Find next appointment for client
+      const now = new Date();
+      const clientAppointments = initialMockAppointments
+        .filter(appt => appt.patientName === "Cliente Logado" && (appt.status === "Agendado" || appt.status === "Confirmado"))
+        .map(appt => ({ ...appt, dateTime: parseISO(appt.date + 'T' + appt.time) }))
+        .filter(appt => appt.dateTime >= now)
+        .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+      
+      setClientNextAppointmentSummary(clientAppointments.length > 0 ? clientAppointments[0] : null);
     }
   }, [searchParams]);
 
@@ -223,9 +239,21 @@ function DashboardContentInternal() {
                 <h4 className="font-semibold">
                   {userRole === 'admin' ? 'Próximo Agendamento (Clínica):' : 'Próxima Consulta:'}
                 </h4>
-                <p>{userRole === 'admin' ? 'Paciente Y - Dra. Modelo - Cardiologia' : 'Dr. Exemplo - Clínica Geral'}</p>
-                <p>Data: {userRole === 'admin' ? '28 de Dezembro de 2024, 11:00' : '25 de Dezembro de 2024, 10:00'}</p>
-                <p>Status: Confirmado</p>
+                {userRole === 'cliente' && clientNextAppointmentSummary ? (
+                  <>
+                    <p>{clientNextAppointmentSummary.doctor} - {clientNextAppointmentSummary.specialty}</p>
+                    <p>Data: {format(parseISO(clientNextAppointmentSummary.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}, {clientNextAppointmentSummary.time}</p>
+                    <p>Status: {clientNextAppointmentSummary.status}</p>
+                  </>
+                ) : userRole === 'cliente' && !clientNextAppointmentSummary ? (
+                    <p>Nenhum agendamento futuro encontrado.</p>
+                ) : ( // Admin view (can keep it generic or fetch specific admin relevant data)
+                  <>
+                    <p>Paciente Y - Dra. Modelo - Cardiologia</p>
+                    <p>Data: 28 de Dezembro de 2024, 11:00</p>
+                    <p>Status: Confirmado</p>
+                  </>
+                )}
               </div>
               <Button 
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
@@ -388,3 +416,4 @@ export default function DashboardClientContent() {
     </Suspense>
   );
 }
+
