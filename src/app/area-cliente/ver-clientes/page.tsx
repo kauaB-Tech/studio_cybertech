@@ -19,11 +19,7 @@ export interface Client {
 }
 
 const mockClients: Client[] = [
-  { id: '1', fullName: 'Ana Silva', email: 'ana.silva@email.com', phone: '(11) 98765-4321' },
-  { id: '2', fullName: 'Bruno Costa', email: 'bruno.costa@email.com', phone: '(21) 91234-5678' },
-  { id: '3', fullName: 'Carla Dias', email: 'carla.dias@email.com', phone: '(31) 95555-1234' },
-  { id: '4', fullName: 'Daniel Faria', email: 'daniel.faria@email.com', phone: '(41) 94321-8765' },
-  { id: '5', fullName: 'Eduarda Lima', email: 'eduarda.lima@email.com', phone: '(51) 99999-0000' },
+  { id: '1', fullName: 'Cliente Exemplo CyberTech', email: 'cliente@cybertech.com', phone: '(11) 98765-4321' },
 ];
 
 export default function ViewClientsPage() {
@@ -117,7 +113,7 @@ export default function ViewClientsPage() {
         onOpenChange={(isOpen) => {
           setIsEditClientDialogOpen(isOpen);
           if (!isOpen) {
-            setEditingClientData(null); 
+            setEditingClientData(null);
           }
         }}
         clientData={editingClientData}
