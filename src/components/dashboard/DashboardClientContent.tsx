@@ -10,6 +10,9 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import EditProfileDialog from "./EditProfileDialog";
 import ViewAppointmentsDialog from "./ViewAppointmentsDialog";
+import ViewExamResultDialog, { type MockExamResult } from "./ViewExamResultDialog";
+import ViewMedicalHistoryDialog from "./ViewMedicalHistoryDialog";
+
 
 interface UserProfile {
   name: string;
@@ -18,10 +21,23 @@ interface UserProfile {
   avatarUrl: string;
 }
 
+const mockExamData: MockExamResult = {
+  examName: "Hemograma Completo",
+  examDate: "15 de Dezembro de 2024",
+  results: [
+    { parameter: "Hemácias", value: "4.5 milhões/µL", reference: "4.2-5.4" },
+    { parameter: "Leucócitos", value: "7.500/µL", reference: "4.000-11.000" },
+    { parameter: "Plaquetas", value: "250.000/µL", reference: "150.000-450.000" },
+  ],
+  observations: "Valores dentro da normalidade.",
+};
+
 export default function DashboardClientContent() {
   const { toast } = useToast();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isViewAppointmentsOpen, setIsViewAppointmentsOpen] = useState(false);
+  const [isViewExamResultOpen, setIsViewExamResultOpen] = useState(false);
+  const [isViewMedicalHistoryOpen, setIsViewMedicalHistoryOpen] = useState(false);
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "Nome do Paciente Exemplo",
@@ -130,13 +146,13 @@ export default function DashboardClientContent() {
               <p>Tenha acesso seguro aos seus prontuários médicos, resultados de exames laboratoriais e de imagem.</p>
                <div className="border p-4 rounded-lg">
                 <h4 className="font-semibold">Último Exame:</h4>
-                <p>Hemograma Completo</p>
-                <p>Data: 15 de Dezembro de 2024</p>
-                <Button variant="link" className="p-0 h-auto" onClick={() => handleFeatureNotImplemented("Ver Resultado de Exame")}>Ver Resultado</Button>
+                <p>{mockExamData.examName}</p>
+                <p>Data: {mockExamData.examDate}</p>
+                <Button variant="link" className="p-0 h-auto" onClick={() => setIsViewExamResultOpen(true)}>Ver Resultado</Button>
               </div>
               <Button 
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
-                onClick={() => handleFeatureNotImplemented("Acessar Histórico Completo de Prontuários")}
+                onClick={() => setIsViewMedicalHistoryOpen(true)}
               >
                 Acessar Histórico Completo
               </Button>
@@ -180,7 +196,15 @@ export default function DashboardClientContent() {
         isOpen={isViewAppointmentsOpen}
         onOpenChange={setIsViewAppointmentsOpen}
       />
+      <ViewExamResultDialog
+        isOpen={isViewExamResultOpen}
+        onOpenChange={setIsViewExamResultOpen}
+        examResult={mockExamData}
+      />
+      <ViewMedicalHistoryDialog
+        isOpen={isViewMedicalHistoryOpen}
+        onOpenChange={setIsViewMedicalHistoryOpen}
+      />
     </>
   );
 }
-
