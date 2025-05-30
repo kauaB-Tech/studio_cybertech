@@ -12,6 +12,7 @@ import EditProfileDialog from "./EditProfileDialog";
 import ViewAppointmentsDialog from "./ViewAppointmentsDialog";
 import ViewExamResultDialog, { type MockExamResult } from "./ViewExamResultDialog";
 import ViewMedicalHistoryDialog from "./ViewMedicalHistoryDialog";
+import ViewBillingHistoryDialog, { type Invoice } from "./ViewBillingHistoryDialog";
 
 
 interface UserProfile {
@@ -32,12 +33,22 @@ const mockExamData: MockExamResult = {
   observations: "Valores dentro da normalidade.",
 };
 
+const mockLatestInvoice: Invoice = {
+  id: "FAT-2024-001",
+  issueDate: "2024-11-15",
+  dueDate: "2024-12-01",
+  amount: 150.00,
+  status: "Paga",
+  description: "Consulta Clínica Geral",
+};
+
 export default function DashboardClientContent() {
   const { toast } = useToast();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isViewAppointmentsOpen, setIsViewAppointmentsOpen] = useState(false);
   const [isViewExamResultOpen, setIsViewExamResultOpen] = useState(false);
   const [isViewMedicalHistoryOpen, setIsViewMedicalHistoryOpen] = useState(false);
+  const [isViewBillingHistoryOpen, setIsViewBillingHistoryOpen] = useState(false);
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "Nome do Paciente Exemplo",
@@ -45,14 +56,6 @@ export default function DashboardClientContent() {
     phone: "(00) 12345-6789",
     avatarUrl: "https://placehold.co/150x150.png",
   });
-
-  const handleFeatureNotImplemented = (featureName: string) => {
-    toast({
-      title: "Funcionalidade em Desenvolvimento",
-      description: `A funcionalidade "${featureName}" ainda não foi implementada.`,
-      variant: "default",
-    });
-  };
 
   const handleProfileUpdate = (updatedProfile: Partial<UserProfile>) => {
     setUserProfile(prev => ({...prev, ...updatedProfile}));
@@ -172,13 +175,13 @@ export default function DashboardClientContent() {
               <p>Acompanhe suas faturas em aberto, histórico de pagamentos e gerencie suas informações de cobrança.</p>
               <div className="border p-4 rounded-lg">
                 <h4 className="font-semibold">Última Fatura:</h4>
-                <p>Referente: Consulta Clínica Geral</p>
-                <p>Valor: R$ 150,00</p>
-                <p>Status: Paga</p>
+                <p>Referente: {mockLatestInvoice.description}</p>
+                <p>Valor: R$ {mockLatestInvoice.amount.toFixed(2).replace('.', ',')}</p>
+                <p>Status: {mockLatestInvoice.status}</p>
               </div>
               <Button 
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
-                onClick={() => handleFeatureNotImplemented("Ver Histórico de Faturas")}
+                onClick={() => setIsViewBillingHistoryOpen(true)}
               >
                 Ver Histórico de Faturas
               </Button>
@@ -204,6 +207,10 @@ export default function DashboardClientContent() {
       <ViewMedicalHistoryDialog
         isOpen={isViewMedicalHistoryOpen}
         onOpenChange={setIsViewMedicalHistoryOpen}
+      />
+      <ViewBillingHistoryDialog
+        isOpen={isViewBillingHistoryOpen}
+        onOpenChange={setIsViewBillingHistoryOpen}
       />
     </>
   );
