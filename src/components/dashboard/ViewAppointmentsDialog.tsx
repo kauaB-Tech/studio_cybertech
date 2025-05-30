@@ -65,14 +65,13 @@ export default function ViewAppointmentsDialog({
   const { toast } = useToast();
   const [appointments, setAppointments] = useState<Appointment[]>(initialMockAppointments);
   const [isCreateAppointmentOpen, setIsCreateAppointmentOpen] = useState(false);
+  const [editingAppointmentData, setEditingAppointmentData] = useState<Appointment | null>(null);
   const [isCancelAlertOpen, setIsCancelAlertOpen] = useState(false);
   const [appointmentToCancelId, setAppointmentToCancelId] = useState<string | null>(null);
 
-  const handleRemarcarAction = (appointmentId: string) => {
-    toast({
-      title: "Funcionalidade em Desenvolvimento",
-      description: `A funcionalidade "Remarcar Agendamento" (${appointmentId}) ainda não foi implementada.`,
-    });
+  const handleRemarcarAction = (appointment: Appointment) => {
+    setEditingAppointmentData(appointment);
+    setIsCreateAppointmentOpen(true);
   };
 
   const promptCancelAppointment = (appointmentId: string) => {
@@ -89,7 +88,7 @@ export default function ViewAppointmentsDialog({
       );
       toast({
         title: "Agendamento Cancelado!",
-        description: `O agendamento ${appointmentToCancelId} foi cancelado com sucesso.`,
+        description: `O agendamento foi cancelado com sucesso.`,
       });
     }
     setIsCancelAlertOpen(false);
@@ -103,19 +102,46 @@ export default function ViewAppointmentsDialog({
     });
   };
 
-
-  const handleAppointmentCreated = (data: NewAppointmentPayload) => {
-    const newAppointment: Appointment = {
-      ...data,
-      id: Date.now().toString(), 
-      status: "Agendado", 
-    };
-    setAppointments(prevAppointments => [newAppointment, ...prevAppointments]); 
-    toast({
-      title: "Agendamento Criado!",
-      description: "Seu novo agendamento foi adicionado à lista.",
-    });
+  const handleSaveAppointment = (data: NewAppointmentPayload, editingId?: string) => {
+    if (editingId) {
+      setAppointments(prevAppointments =>
+        prevAppointments.map(appt =>
+          appt.id === editingId 
+            ? { ...appt, 
+                date: data.date, 
+                time: data.time, 
+                specialty: data.specialty, 
+                doctor: data.doctor, 
+                notes: data.notes,
+                // Manter status original ou definir um status específico para remarcação, ex: "Remarcado"
+                // Por simplicidade, vamos manter o status que ele tinha, apenas atualizando os dados.
+              } 
+            : appt
+        )
+      );
+      toast({
+        title: "Agendamento Remarcado!",
+        description: "Os detalhes do seu agendamento foram atualizados.",
+      });
+    } else {
+      const newAppointment: Appointment = {
+        ...data,
+        id: Date.now().toString(), 
+        status: "Agendado", 
+      };
+      setAppointments(prevAppointments => [newAppointment, ...prevAppointments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())); 
+      toast({
+        title: "Agendamento Criado!",
+        description: "Seu novo agendamento foi adicionado à lista.",
+      });
+    }
+    setEditingAppointmentData(null); // Limpar após salvar
   };
+
+  const openCreateAppointmentDialog = () => {
+    setEditingAppointmentData(null); // Garantir que não está em modo de edição
+    setIsCreateAppointmentOpen(true);
+  }
 
   return (
     <>
@@ -161,7 +187,7 @@ export default function ViewAppointmentsDialog({
                     <TableCell className="text-right space-x-2">
                       {(appt.status === "Agendado" || appt.status === "Confirmado") && (
                         <>
-                          <Button variant="outline" size="sm" onClick={() => handleRemarcarAction(appt.id)}>Remarcar</Button>
+                          <Button variant="outline" size="sm" onClick={() => handleRemarcarAction(appt)}>Remarcar</Button>
                           <Button variant="destructive" size="sm" onClick={() => promptCancelAppointment(appt.id)}>Cancelar</Button>
                         </>
                       )}
@@ -178,7 +204,7 @@ export default function ViewAppointmentsDialog({
              <DialogClose asChild>
               <Button type="button" variant="outline">Fechar</Button>
             </DialogClose>
-            <Button onClick={() => setIsCreateAppointmentOpen(true)}>
+            <Button onClick={openCreateAppointmentDialog}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Novo Agendamento
             </Button>
@@ -188,8 +214,14 @@ export default function ViewAppointmentsDialog({
 
       <CreateAppointmentDialog
         isOpen={isCreateAppointmentOpen}
-        onOpenChange={setIsCreateAppointmentOpen}
-        onAppointmentCreated={handleAppointmentCreated}
+        onOpenChange={(open) => {
+            setIsCreateAppointmentOpen(open);
+            if (!open) {
+              setEditingAppointmentData(null); // Resetar modo de edição ao fechar
+            }
+        }}
+        onSaveAppointment={handleSaveAppointment}
+        editingAppointment={editingAppointmentData}
       />
 
       <AlertDialog open={isCancelAlertOpen} onOpenChange={setIsCancelAlertOpen}>

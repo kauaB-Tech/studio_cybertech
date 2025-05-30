@@ -37,7 +37,9 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Dispatch, SetStateAction } from "react";
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import type { Appointment } from "./ViewAppointmentsDialog"; // Import Appointment type
 
 const appointmentFormSchema = z.object({
   date: z.date({ required_error: "A data do agendamento é obrigatória." }),
@@ -60,7 +62,8 @@ export interface NewAppointmentPayload {
 interface CreateAppointmentDialogProps {
   isOpen: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  onAppointmentCreated: (data: NewAppointmentPayload) => void;
+  onSaveAppointment: (data: NewAppointmentPayload, editingId?: string) => void;
+  editingAppointment?: Appointment | null;
 }
 
 const availableTimes = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
@@ -71,39 +74,72 @@ const availableDoctors = ["Dr. Exemplo", "Dra. Modelo", "Dr. Teste", "Dra. Nova"
 export default function CreateAppointmentDialog({ 
   isOpen, 
   onOpenChange,
-  onAppointmentCreated
+  onSaveAppointment,
+  editingAppointment
 }: CreateAppointmentDialogProps) {
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
+        date: undefined,
+        time: undefined,
+        specialty: undefined,
+        doctor: undefined,
         notes: "",
     }
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      if (editingAppointment) {
+        form.reset({
+          date: new Date(editingAppointment.date + 'T00:00:00'), // Ajuste para fuso horário local
+          time: editingAppointment.time,
+          specialty: editingAppointment.specialty,
+          doctor: editingAppointment.doctor,
+          notes: editingAppointment.notes || "",
+        });
+      } else {
+        form.reset({
+          date: undefined,
+          time: undefined,
+          specialty: undefined,
+          doctor: undefined,
+          notes: "",
+        });
+      }
+    }
+  }, [isOpen, editingAppointment, form]);
+
   function onSubmit(data: AppointmentFormValues) {
     const payload: NewAppointmentPayload = {
-      date: format(data.date, "yyyy-MM-dd"), // Formatar a data para string
+      date: format(data.date, "yyyy-MM-dd"),
       time: data.time,
       specialty: data.specialty,
       doctor: data.doctor,
       notes: data.notes,
     };
-    onAppointmentCreated(payload);
-    onOpenChange(false); // Close dialog on submit
-    form.reset(); // Reset form fields
+    onSaveAppointment(payload, editingAppointment ? editingAppointment.id : undefined);
+    onOpenChange(false); 
   }
+  
+  const dialogTitle = editingAppointment ? "Remarcar Agendamento" : "Criar Novo Agendamento";
+  const dialogDescription = editingAppointment 
+    ? "Altere os dados abaixo para remarcar o agendamento."
+    : "Preencha os dados abaixo para criar um novo agendamento.";
+  const saveButtonText = editingAppointment ? "Salvar Alterações" : "Salvar Agendamento";
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) form.reset(); 
+      if (!open) {
+        // Não resetar o form aqui, pois o useEffect já lida com isso baseado em isOpen e editingAppointment
+        // Isso previne que o form seja resetado para valores vazios brevemente antes de fechar ao editar.
+      }
       onOpenChange(open);
     }}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Criar Novo Agendamento</DialogTitle>
-          <DialogDescription>
-            Preencha os dados abaixo para criar um novo agendamento.
-          </DialogDescription>
+          <DialogTitle>{dialogTitle}</DialogTitle>
+          <DialogDescription>{dialogDescription}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
@@ -138,7 +174,7 @@ export default function CreateAppointmentDialog({
                         selected={field.value}
                         onSelect={field.onChange}
                         disabled={(date) =>
-                          date < new Date(new Date().setHours(0,0,0,0)) // Disable past dates
+                          date < new Date(new Date().setHours(0,0,0,0)) 
                         }
                         initialFocus
                         locale={ptBR}
@@ -156,7 +192,7 @@ export default function CreateAppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Hora</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um horário" />
@@ -179,7 +215,7 @@ export default function CreateAppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Especialidade</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma especialidade" />
@@ -202,7 +238,7 @@ export default function CreateAppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Profissional</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um profissional" />
@@ -240,7 +276,7 @@ export default function CreateAppointmentDialog({
               <DialogClose asChild>
                  <Button type="button" variant="outline">Cancelar</Button>
               </DialogClose>
-              <Button type="submit">Salvar Agendamento</Button>
+              <Button type="submit">{saveButtonText}</Button>
             </DialogFooter>
           </form>
         </Form>
