@@ -13,6 +13,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Table,
   TableBody,
   TableCell,
@@ -55,21 +65,52 @@ export default function ViewAppointmentsDialog({
   const { toast } = useToast();
   const [appointments, setAppointments] = useState<Appointment[]>(initialMockAppointments);
   const [isCreateAppointmentOpen, setIsCreateAppointmentOpen] = useState(false);
+  const [isCancelAlertOpen, setIsCancelAlertOpen] = useState(false);
+  const [appointmentToCancelId, setAppointmentToCancelId] = useState<string | null>(null);
 
-  const handleAction = (actionName: string, appointmentId: string) => {
+  const handleRemarcarAction = (appointmentId: string) => {
     toast({
-      title: `Ação: ${actionName}`,
-      description: `Funcionalidade para ${actionName.toLowerCase()} o agendamento ${appointmentId} não implementada.`,
+      title: "Funcionalidade em Desenvolvimento",
+      description: `A funcionalidade "Remarcar Agendamento" (${appointmentId}) ainda não foi implementada.`,
     });
   };
+
+  const promptCancelAppointment = (appointmentId: string) => {
+    setAppointmentToCancelId(appointmentId);
+    setIsCancelAlertOpen(true);
+  };
+
+  const handleConfirmCancel = () => {
+    if (appointmentToCancelId) {
+      setAppointments(prevAppointments =>
+        prevAppointments.map(appt =>
+          appt.id === appointmentToCancelId ? { ...appt, status: "Cancelado" } : appt
+        )
+      );
+      toast({
+        title: "Agendamento Cancelado!",
+        description: `O agendamento ${appointmentToCancelId} foi cancelado com sucesso.`,
+      });
+    }
+    setIsCancelAlertOpen(false);
+    setAppointmentToCancelId(null);
+  };
+  
+  const handleViewDetailsAction = (appointmentId: string) => {
+    toast({
+        title: "Funcionalidade em Desenvolvimento",
+        description: `A funcionalidade "Ver Detalhes" (${appointmentId}) ainda não foi implementada.`,
+    });
+  };
+
 
   const handleAppointmentCreated = (data: NewAppointmentPayload) => {
     const newAppointment: Appointment = {
       ...data,
-      id: Date.now().toString(), // Gera um ID simples para o novo agendamento
-      status: "Agendado", // Status padrão para novos agendamentos
+      id: Date.now().toString(), 
+      status: "Agendado", 
     };
-    setAppointments(prevAppointments => [newAppointment, ...prevAppointments]); // Adiciona no início da lista
+    setAppointments(prevAppointments => [newAppointment, ...prevAppointments]); 
     toast({
       title: "Agendamento Criado!",
       description: "Seu novo agendamento foi adicionado à lista.",
@@ -79,7 +120,7 @@ export default function ViewAppointmentsDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl"> {/* Increased max width */}
+        <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
           <DialogHeader>
             <DialogTitle>Meus Agendamentos</DialogTitle>
             <DialogDescription>
@@ -120,12 +161,12 @@ export default function ViewAppointmentsDialog({
                     <TableCell className="text-right space-x-2">
                       {(appt.status === "Agendado" || appt.status === "Confirmado") && (
                         <>
-                          <Button variant="outline" size="sm" onClick={() => handleAction("Remarcar", appt.id)}>Remarcar</Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleAction("Cancelar", appt.id)}>Cancelar</Button>
+                          <Button variant="outline" size="sm" onClick={() => handleRemarcarAction(appt.id)}>Remarcar</Button>
+                          <Button variant="destructive" size="sm" onClick={() => promptCancelAppointment(appt.id)}>Cancelar</Button>
                         </>
                       )}
                        {appt.status === "Realizado" && (
-                          <Button variant="outline" size="sm" onClick={() => handleAction("Ver Detalhes", appt.id)}>Detalhes</Button>
+                          <Button variant="outline" size="sm" onClick={() => handleViewDetailsAction(appt.id)}>Detalhes</Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -150,6 +191,21 @@ export default function ViewAppointmentsDialog({
         onOpenChange={setIsCreateAppointmentOpen}
         onAppointmentCreated={handleAppointmentCreated}
       />
+
+      <AlertDialog open={isCancelAlertOpen} onOpenChange={setIsCancelAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Cancelamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja cancelar este agendamento? Esta ação não poderá ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setAppointmentToCancelId(null)}>Não, manter</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmCancel}>Sim, cancelar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
