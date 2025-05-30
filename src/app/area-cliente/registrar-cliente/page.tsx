@@ -11,13 +11,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus, Users } from 'lucide-react';
 
 const registerClientFormSchema = z.object({
   fullName: z.string().min(3, { message: "O nome completo deve ter pelo menos 3 caracteres." }),
   email: z.string().email({ message: "Por favor, insira um email válido." }),
   phone: z.string().min(10, { message: "O telefone deve ter pelo menos 10 dígitos (com DDD)." }),
-  // Adicionar mais campos conforme necessário, ex: CPF, Data de Nascimento, Endereço, etc.
 });
 
 type RegisterClientFormValues = z.infer<typeof registerClientFormSchema>;
@@ -34,13 +33,12 @@ export default function RegisterClientPage() {
   });
 
   function onSubmit(values: RegisterClientFormValues) {
-    // Simulação de envio para API
     console.log("Dados do novo cliente:", values);
     toast({
       title: "Cliente Registrado com Sucesso!",
       description: `O cliente ${values.fullName} foi adicionado ao sistema.`,
     });
-    form.reset(); // Limpa o formulário após o envio
+    form.reset(); 
   }
 
   return (
@@ -55,11 +53,18 @@ export default function RegisterClientPage() {
             Preencha os dados abaixo para cadastrar um novo cliente no sistema.
           </p>
         </div>
-        <Button variant="outline" asChild>
-          <Link href="/area-cliente/dashboard?role=admin" className="flex items-center gap-1 self-start sm:self-auto">
-            <ArrowLeft className="h-4 w-4" /> Voltar ao Painel do Admin
-          </Link>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 self-start sm:self-auto">
+          <Button variant="outline" asChild>
+            <Link href="/area-cliente/ver-clientes" className="flex items-center gap-1">
+              <Users className="h-4 w-4" /> Ver Clientes Cadastrados
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/area-cliente/dashboard?role=admin" className="flex items-center gap-1">
+              <ArrowLeft className="h-4 w-4" /> Voltar ao Painel do Admin
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <Card className="w-full max-w-2xl mx-auto shadow-xl">
@@ -109,7 +114,6 @@ export default function RegisterClientPage() {
                   </FormItem>
                 )}
               />
-              {/* Adicionar mais campos aqui se necessário */}
               <Button type="submit" className="w-full">
                 Registrar Cliente
               </Button>
