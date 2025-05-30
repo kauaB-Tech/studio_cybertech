@@ -100,6 +100,20 @@ export default function RecentActivitiesPage() {
   });
   const [isActionAlertOpen, setIsActionAlertOpen] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<{ type: 'Bloquear' | 'Suspender' | 'Ativar'; newStatus: UserAccountInfo['status'] } | null>(null);
+  const [clientFormattedTimestamps, setClientFormattedTimestamps] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const formattedTimestamps: Record<string, string> = {};
+    mockActivities.forEach(activity => {
+      try {
+        formattedTimestamps[activity.id] = format(parseISO(activity.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: ptBR });
+      } catch (error) {
+        console.error("Error formatting date for activity:", activity.id, error);
+        formattedTimestamps[activity.id] = "Data inválida"; 
+      }
+    });
+    setClientFormattedTimestamps(formattedTimestamps);
+  }, []);
   
   const getStatusClass = (status: ActivityLogEntry['status']) => {
     switch (status) {
@@ -273,6 +287,7 @@ export default function RecentActivitiesPage() {
                 <TableBody>
                   {mockActivities.map((activity) => {
                     const ActivityIcon = activity.icon;
+                    const displayTimestamp = clientFormattedTimestamps[activity.id] || 'Carregando...';
                     return (
                       <TableRow key={activity.id}>
                         <TableCell>
@@ -281,7 +296,7 @@ export default function RecentActivitiesPage() {
                           </div>
                         </TableCell>
                         <TableCell className="whitespace-nowrap">
-                          {format(parseISO(activity.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                          {displayTimestamp}
                         </TableCell>
                         <TableCell className="font-medium">{activity.event}</TableCell>
                         <TableCell>{activity.details}</TableCell>
