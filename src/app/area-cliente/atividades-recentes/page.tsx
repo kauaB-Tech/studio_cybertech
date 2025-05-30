@@ -30,6 +30,7 @@ interface ActivityLogEntry {
   device?: string;
   status: 'Sucesso' | 'Falha' | 'Informação';
   icon: React.ElementType;
+  accountStatusAtEvent?: UserAccountInfo['status']; // Novo campo
 }
 
 interface UserAccountInfo {
@@ -48,6 +49,7 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Desktop, Chrome',
     status: 'Sucesso',
     icon: LogIn,
+    accountStatusAtEvent: 'Ativa',
   },
   {
     id: '2',
@@ -58,6 +60,7 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Mobile, Safari',
     status: 'Falha',
     icon: ShieldAlert,
+    // Nenhuma mudança de status explícita neste evento isolado
   },
   {
     id: '3',
@@ -68,6 +71,7 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Desktop, Firefox',
     status: 'Sucesso',
     icon: KeyRound,
+    accountStatusAtEvent: 'Ativa',
   },
   {
     id: '4',
@@ -78,6 +82,7 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Desktop, Chrome',
     status: 'Informação',
     icon: UserCog,
+    // Nenhuma mudança de status explícita
   },
   {
     id: '5',
@@ -88,6 +93,39 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Tablet, Chrome',
     status: 'Sucesso',
     icon: LogIn,
+    accountStatusAtEvent: 'Ativa',
+  },
+  {
+    id: '6',
+    timestamp: '2024-12-04T18:00:00Z',
+    event: 'Conta bloqueada por segurança',
+    details: 'Múltiplas tentativas de login falhadas detectadas.',
+    ipAddress: '203.0.113.45',
+    device: 'Mobile, Safari',
+    status: 'Informação',
+    icon: Lock,
+    accountStatusAtEvent: 'Bloqueada',
+  },
+  {
+    id: '7',
+    timestamp: '2024-12-03T10:00:00Z',
+    event: 'Conta reativada pelo suporte',
+    details: 'Acesso à conta restaurado após verificação.',
+    ipAddress: '192.168.1.1',
+    device: 'Desktop, Admin Panel',
+    status: 'Sucesso',
+    icon: UserCheck,
+    accountStatusAtEvent: 'Ativa',
+  },
+  {
+    id: '8',
+    timestamp: '2024-12-02T10:00:00Z',
+    event: 'Conta suspensa por inatividade',
+    details: 'A conta foi suspensa devido a um longo período de inatividade.',
+    ipAddress: 'Sistema Automático',
+    status: 'Informação',
+    icon: UserX,
+    accountStatusAtEvent: 'Suspensa',
   },
 ];
 
@@ -96,7 +134,7 @@ export default function RecentActivitiesPage() {
   const [accountInfo, setAccountInfo] = useState<UserAccountInfo>({
     name: "Nome do Paciente Exemplo",
     email: "paciente@exemplo.com",
-    status: "Ativa",
+    status: "Ativa", // Status inicial padrão
   });
   const [isActionAlertOpen, setIsActionAlertOpen] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<{ type: 'Bloquear' | 'Suspender' | 'Ativar'; newStatus: UserAccountInfo['status'] } | null>(null);
@@ -166,6 +204,22 @@ export default function RecentActivitiesPage() {
     return '';
   };
 
+  const handleActivityLogClick = (activity: ActivityLogEntry) => {
+    if (activity.accountStatusAtEvent) {
+      setAccountInfo(prev => ({ ...prev, status: activity.accountStatusAtEvent! }));
+      toast({
+        title: "Visualizando Status Histórico",
+        description: `O status da conta no momento do evento "${activity.event}" foi carregado.`,
+      });
+    } else {
+        toast({
+        title: "Nenhuma Mudança de Status",
+        description: `Este evento (${activity.event}) não alterou o status da conta.`,
+        variant: "default" 
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
       <header className="mb-8 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
@@ -220,8 +274,8 @@ export default function RecentActivitiesPage() {
           ) : (
              <Button 
               variant="outline" 
-              className="flex items-center gap-2 text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={() => handleAccountAction('Ativar', 'Ativa')}
+              className="flex items-center gap-2 text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700 cursor-not-allowed opacity-70"
+              disabled
             >
               <Lock className="h-5 w-5" /> Conta Bloqueada
             </Button>
@@ -239,8 +293,8 @@ export default function RecentActivitiesPage() {
           ) : accountInfo.status === 'Suspensa' ? (
             <Button 
               variant="outline" 
-              className="flex items-center gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
-              onClick={() => handleAccountAction('Ativar', 'Ativa')}
+              className="flex items-center gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 cursor-not-allowed opacity-70"
+              disabled
             >
               <UserX className="h-5 w-5" /> Conta Suspensa
             </Button>
@@ -267,7 +321,7 @@ export default function RecentActivitiesPage() {
       <Card className="shadow-xl">
         <CardHeader>
           <CardTitle className="font-headline text-2xl">Log de Atividades de Segurança</CardTitle>
-          <CardDescription>Eventos registrados em ordem cronológica decrescente.</CardDescription>
+          <CardDescription>Eventos registrados em ordem cronológica decrescente. Clique em um evento para ver o status da conta naquele momento.</CardDescription>
         </CardHeader>
         <CardContent>
           {mockActivities.length > 0 ? (
@@ -281,7 +335,7 @@ export default function RecentActivitiesPage() {
                     <TableHead>Detalhes</TableHead>
                     <TableHead>Endereço IP</TableHead>
                     <TableHead>Dispositivo</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Status do Evento</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -289,7 +343,11 @@ export default function RecentActivitiesPage() {
                     const ActivityIcon = activity.icon;
                     const displayTimestamp = clientFormattedTimestamps[activity.id] || 'Carregando...';
                     return (
-                      <TableRow key={activity.id}>
+                      <TableRow 
+                        key={activity.id} 
+                        onClick={() => handleActivityLogClick(activity)}
+                        className="cursor-pointer hover:bg-muted/50"
+                      >
                         <TableCell>
                           <div className={`p-2 rounded-full ${getIconBgClass(activity.status)} ${getStatusClass(activity.status)} inline-flex`}>
                             <ActivityIcon className="h-5 w-5" />
@@ -332,7 +390,11 @@ export default function RecentActivitiesPage() {
             <AlertDialogCancel onClick={() => { setIsActionAlertOpen(false); setActionToConfirm(null); }}>Cancelar</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmAccountAction}
-              className={actionToConfirm?.newStatus === 'Bloqueada' || actionToConfirm?.newStatus === 'Suspensa' ? 'bg-destructive hover:bg-destructive/90' : ''}
+              className={
+                actionToConfirm?.type === 'Bloquear' ? 'bg-red-600 hover:bg-red-700' : 
+                actionToConfirm?.type === 'Suspender' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
+                actionToConfirm?.type === 'Ativar' ? 'bg-green-600 hover:bg-green-700' : ''
+              }
             >
               Confirmar {actionToConfirm?.type}
             </AlertDialogAction>
@@ -342,4 +404,3 @@ export default function RecentActivitiesPage() {
     </div>
   );
 }
-
