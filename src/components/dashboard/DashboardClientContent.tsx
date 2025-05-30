@@ -51,6 +51,9 @@ export default function DashboardClientContent() {
   const [isViewMedicalHistoryOpen, setIsViewMedicalHistoryOpen] = useState(false);
   const [isViewBillingHistoryOpen, setIsViewBillingHistoryOpen] = useState(false);
 
+  // Simulação do papel do usuário. Mude para 'admin' para ver a aba Segurança.
+  const [userRole, setUserRole] = useState<'cliente' | 'admin'>('cliente'); 
+
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "Nome do Paciente Exemplo",
     email: "paciente@exemplo.com",
@@ -69,7 +72,7 @@ export default function DashboardClientContent() {
   return (
     <>
       <Tabs defaultValue="appointments" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 mb-6">
+        <TabsList className={`grid w-full grid-cols-1 ${userRole === 'admin' ? 'md:grid-cols-5' : 'md:grid-cols-4'} mb-6`}>
           <TabsTrigger value="profile" className="flex items-center gap-2 py-3">
             <User className="h-5 w-5" /> Meu Perfil
           </TabsTrigger>
@@ -82,9 +85,11 @@ export default function DashboardClientContent() {
           <TabsTrigger value="billing" className="flex items-center gap-2 py-3">
             <CreditCard className="h-5 w-5" /> Faturamento
           </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2 py-3">
-            <Shield className="h-5 w-5" /> Segurança
-          </TabsTrigger>
+          {userRole === 'admin' && (
+            <TabsTrigger value="security" className="flex items-center gap-2 py-3">
+              <Shield className="h-5 w-5" /> Segurança
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="profile">
@@ -193,35 +198,37 @@ export default function DashboardClientContent() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="security">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
-                <Shield className="h-6 w-6" /> Monitoramento de Segurança
-              </CardTitle>
-              <CardDescription>Acompanhe as atividades recentes e gerencie a segurança da sua conta.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p>Para sua proteção, registramos atividades importantes relacionadas à sua conta. Você pode visualizar o log detalhado de atividades para verificar acessos e modificações.</p>
-              <p className="text-sm text-muted-foreground">Recomendamos verificar esta seção regularmente.</p>
-              <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/area-cliente/atividades-recentes">
-                  Ver Log de Atividades Detalhado
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-               <div className="mt-6 border-t pt-4">
-                <h4 className="text-lg font-semibold mb-2">Dicas de Segurança</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-foreground/80">
-                    <li>Use senhas fortes e únicas.</li>
-                    <li>Não compartilhe suas credenciais de login.</li>
-                    <li>Fique atento a emails ou mensagens suspeitas.</li>
-                    <li>Monitore suas atividades recentes regularmente.</li>
-                </ul>
-               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {userRole === 'admin' && (
+          <TabsContent value="security">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+                  <Shield className="h-6 w-6" /> Monitoramento de Segurança
+                </CardTitle>
+                <CardDescription>Acompanhe as atividades recentes e gerencie a segurança da sua conta.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p>Para sua proteção, registramos atividades importantes relacionadas à sua conta. Você pode visualizar o log detalhado de atividades para verificar acessos e modificações.</p>
+                <p className="text-sm text-muted-foreground">Recomendamos verificar esta seção regularmente.</p>
+                <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Link href="/area-cliente/atividades-recentes">
+                    Ver Log de Atividades Detalhado
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+                 <div className="mt-6 border-t pt-4">
+                  <h4 className="text-lg font-semibold mb-2">Dicas de Segurança</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-foreground/80">
+                      <li>Use senhas fortes e únicas.</li>
+                      <li>Não compartilhe suas credenciais de login.</li>
+                      <li>Fique atento a emails ou mensagens suspeitas.</li>
+                      <li>Monitore suas atividades recentes regularmente.</li>
+                  </ul>
+                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
       </Tabs>
       <EditProfileDialog 
@@ -250,3 +257,4 @@ export default function DashboardClientContent() {
     </>
   );
 }
+
