@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,8 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CalendarDays, ClipboardList, CreditCard, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardClientContent() {
+  const { toast } = useToast();
+
+  const handleFeatureNotImplemented = (featureName: string) => {
+    toast({
+      title: "Funcionalidade em Desenvolvimento",
+      description: `A funcionalidade "${featureName}" ainda não foi implementada.`,
+      variant: "default",
+    });
+  };
+
   return (
     <Tabs defaultValue="appointments" className="w-full">
       <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 mb-6">
@@ -42,7 +54,12 @@ export default function DashboardClientContent() {
               </div>
             </div>
             <p>Aqui você poderá editar seus dados cadastrais, como endereço, telefone e preferências de comunicação.</p>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Editar Perfil</Button>
+            <Button 
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => handleFeatureNotImplemented("Editar Perfil")}
+            >
+              Editar Perfil
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -63,7 +80,12 @@ export default function DashboardClientContent() {
               <p>Data: 25 de Dezembro de 2024, 10:00</p>
               <p>Status: Confirmado</p>
             </div>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Ver Todos Agendamentos</Button>
+            <Button 
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => handleFeatureNotImplemented("Ver Todos Agendamentos")}
+            >
+              Ver Todos Agendamentos
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -82,9 +104,14 @@ export default function DashboardClientContent() {
               <h4 className="font-semibold">Último Exame:</h4>
               <p>Hemograma Completo</p>
               <p>Data: 15 de Dezembro de 2024</p>
-              <Button variant="link" className="p-0 h-auto">Ver Resultado</Button>
+              <Button variant="link" className="p-0 h-auto" onClick={() => handleFeatureNotImplemented("Ver Resultado de Exame")}>Ver Resultado</Button>
             </div>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Acessar Histórico Completo</Button>
+            <Button 
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => handleFeatureNotImplemented("Acessar Histórico Completo de Prontuários")}
+            >
+              Acessar Histórico Completo
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
@@ -105,7 +132,12 @@ export default function DashboardClientContent() {
               <p>Valor: R$ 150,00</p>
               <p>Status: Paga</p>
             </div>
-            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">Ver Histórico de Faturas</Button>
+            <Button 
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+              onClick={() => handleFeatureNotImplemented("Ver Histórico de Faturas")}
+            >
+              Ver Histórico de Faturas
+            </Button>
           </CardContent>
         </Card>
       </TabsContent>
