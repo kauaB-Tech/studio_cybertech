@@ -52,7 +52,6 @@ export default function ContactPage() {
             className="rounded-lg shadow-xl object-cover w-full h-auto md:h-[480px]"
             data-ai-hint="clinic exterior"
           />
-           <p className="text-sm text-muted-foreground mt-2 text-center">Imagem meramente ilustrativa da fachada da clínica.</p>
         </div>
       </div>
     </div>
