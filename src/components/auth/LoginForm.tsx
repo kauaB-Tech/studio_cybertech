@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +26,12 @@ const formSchema = z.object({
   password: z.string().min(6, { message: "A senha deve ter pelo menos 6 caracteres." }),
 });
 
+// Definição das credenciais
+const USER_CREDENTIALS = {
+  CLIENTE: { email: "cliente@exemplo.com", password: "senha123", role: "cliente" },
+  ADMIN: { email: "admin@exemplo.com", password: "admin123", role: "admin" },
+};
+
 export default function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
@@ -38,16 +45,21 @@ export default function LoginForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Mock login logic
     console.log("Login attempt with:", values);
     // Simulate API call
     setTimeout(() => {
-      if (values.email === "cliente@exemplo.com" && values.password === "senha123") {
+      if (values.email === USER_CREDENTIALS.CLIENTE.email && values.password === USER_CREDENTIALS.CLIENTE.password) {
         toast({
-          title: "Login bem-sucedido!",
+          title: "Login de Cliente bem-sucedido!",
           description: "Redirecionando para o painel...",
         });
-        router.push("/area-cliente/dashboard");
+        router.push("/area-cliente/dashboard"); // Cliente não precisa do parâmetro de role ou pode ser ?role=cliente
+      } else if (values.email === USER_CREDENTIALS.ADMIN.email && values.password === USER_CREDENTIALS.ADMIN.password) {
+        toast({
+          title: "Login de Administrador bem-sucedido!",
+          description: "Redirecionando para o painel...",
+        });
+        router.push("/area-cliente/dashboard?role=admin");
       } else {
         toast({
           variant: "destructive",
@@ -105,6 +117,10 @@ export default function LoginForm() {
           <Link href="/area-cliente/recuperar-senha" className="text-sm text-primary hover:underline">
             Esqueceu sua senha?
           </Link>
+        </div>
+        <div className="mt-4 text-center text-sm text-muted-foreground">
+            <p>Cliente: cliente@exemplo.com / senha123</p>
+            <p>Admin: admin@exemplo.com / admin123</p>
         </div>
       </CardContent>
     </Card>

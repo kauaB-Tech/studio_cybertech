@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react"; // Adicionado Suspense
 import Link from "next/link";
+import { useSearchParams } from 'next/navigation'; // Importado useSearchParams
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, ClipboardList, CreditCard, User, Shield, ExternalLink } from "lucide-react";
@@ -43,15 +44,15 @@ const mockLatestInvoice: Invoice = {
   description: "Consulta Clínica Geral",
 };
 
-export default function DashboardClientContent() {
+// Componente interno para usar useSearchParams, pois precisa estar dentro de <Suspense>
+function DashboardContentInternal() {
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isViewAppointmentsOpen, setIsViewAppointmentsOpen] = useState(false);
   const [isViewExamResultOpen, setIsViewExamResultOpen] = useState(false);
   const [isViewMedicalHistoryOpen, setIsViewMedicalHistoryOpen] = useState(false);
   const [isViewBillingHistoryOpen, setIsViewBillingHistoryOpen] = useState(false);
-
-  // Simulação do papel do usuário. Mude para 'admin' para ver a aba Segurança.
   const [userRole, setUserRole] = useState<'cliente' | 'admin'>('cliente'); 
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -60,6 +61,25 @@ export default function DashboardClientContent() {
     phone: "(00) 12345-6789",
     avatarUrl: "https://placehold.co/150x150.png",
   });
+
+  useEffect(() => {
+    const roleFromQuery = searchParams.get('role');
+    if (roleFromQuery === 'admin') {
+      setUserRole('admin');
+      setUserProfile(prev => ({
+        ...prev,
+        name: "Nome do Administrador",
+        email: "admin@exemplo.com",
+      }));
+    } else {
+      setUserRole('cliente');
+      setUserProfile(prev => ({
+        ...prev,
+        name: "Nome do Paciente Exemplo",
+        email: "paciente@exemplo.com",
+      }));
+    }
+  }, [searchParams]);
 
   const handleProfileUpdate = (updatedProfile: Partial<UserProfile>) => {
     setUserProfile(prev => ({...prev, ...updatedProfile}));
@@ -258,3 +278,11 @@ export default function DashboardClientContent() {
   );
 }
 
+export default function DashboardClientContent() {
+  // Envolve DashboardContentInternal com Suspense para permitir o uso de useSearchParams
+  return (
+    <Suspense fallback={<div>Carregando informações do usuário...</div>}>
+      <DashboardContentInternal />
+    </Suspense>
+  );
+}
