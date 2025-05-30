@@ -1,11 +1,25 @@
 
+"use client";
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ShieldCheck, LogIn, ShieldAlert, KeyRound, UserCog } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, LogIn, ShieldAlert, KeyRound, UserCog, UserCircle, Lock, UserX, UserCheck, AlertTriangle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface ActivityLogEntry {
   id: string;
@@ -16,6 +30,12 @@ interface ActivityLogEntry {
   device?: string;
   status: 'Sucesso' | 'Falha' | 'Informação';
   icon: React.ElementType;
+}
+
+interface UserAccountInfo {
+  name: string;
+  email: string;
+  status: 'Ativa' | 'Suspensa' | 'Bloqueada';
 }
 
 const mockActivities: ActivityLogEntry[] = [
@@ -72,6 +92,15 @@ const mockActivities: ActivityLogEntry[] = [
 ];
 
 export default function RecentActivitiesPage() {
+  const { toast } = useToast();
+  const [accountInfo, setAccountInfo] = useState<UserAccountInfo>({
+    name: "Nome do Paciente Exemplo",
+    email: "paciente@exemplo.com",
+    status: "Ativa",
+  });
+  const [isActionAlertOpen, setIsActionAlertOpen] = useState(false);
+  const [actionToConfirm, setActionToConfirm] = useState<{ type: 'Bloquear' | 'Suspender' | 'Ativar'; newStatus: UserAccountInfo['status'] } | null>(null);
+  
   const getStatusClass = (status: ActivityLogEntry['status']) => {
     switch (status) {
       case 'Sucesso':
@@ -98,24 +127,128 @@ export default function RecentActivitiesPage() {
     }
   };
 
+  const handleAccountAction = (type: 'Bloquear' | 'Suspender' | 'Ativar', newStatus: UserAccountInfo['status']) => {
+    setActionToConfirm({ type, newStatus });
+    setIsActionAlertOpen(true);
+  };
+
+  const confirmAccountAction = () => {
+    if (actionToConfirm) {
+      setAccountInfo(prev => ({ ...prev, status: actionToConfirm.newStatus }));
+      toast({
+        title: `Conta ${actionToConfirm.newStatus.toLowerCase()}!`,
+        description: `A conta foi ${actionToConfirm.newStatus.toLowerCase()} com sucesso.`,
+        variant: actionToConfirm.newStatus === "Bloqueada" || actionToConfirm.newStatus === "Suspensa" ? "destructive" : "default",
+      });
+    }
+    setIsActionAlertOpen(false);
+    setActionToConfirm(null);
+  };
+
+  const getAccountStatusClass = (status: UserAccountInfo['status']) => {
+    if (status === 'Ativa') return 'text-green-600';
+    if (status === 'Suspensa') return 'text-yellow-600';
+    if (status === 'Bloqueada') return 'text-red-600';
+    return '';
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
-      <header className="mb-8 flex justify-between items-center">
+      <header className="mb-8 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-4xl font-headline font-bold text-primary flex items-center gap-2">
             <ShieldCheck className="h-10 w-10" />
-            Minhas Atividades Recentes
+            Minhas Atividades e Segurança
           </h1>
           <p className="text-lg text-foreground/80 mt-2">
-            Acompanhe os eventos de segurança relacionados à sua conta.
+            Acompanhe os eventos de segurança e gerencie o status da sua conta.
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/area-cliente/dashboard" className="flex items-center gap-1">
+          <Link href="/area-cliente/dashboard" className="flex items-center gap-1 self-start sm:self-auto">
             <ArrowLeft className="h-4 w-4" /> Voltar ao Painel
           </Link>
         </Button>
       </header>
+
+      <Card className="shadow-xl mb-8">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+            <UserCircle className="h-7 w-7" />
+            Informações da Conta
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p><strong>Nome:</strong> {accountInfo.name}</p>
+          <p><strong>Email:</strong> {accountInfo.email}</p>
+          <p><strong>Status da Conta:</strong> <span className={`font-semibold ${getAccountStatusClass(accountInfo.status)}`}>{accountInfo.status}</span></p>
+        </CardContent>
+      </Card>
+      
+      <Card className="shadow-xl mb-8">
+        <CardHeader>
+          <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+             <UserCog className="h-7 w-7" />
+            Gerenciamento da Conta
+          </CardTitle>
+          <CardDescription>Ações de segurança para sua conta.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row gap-4">
+          {accountInfo.status !== 'Bloqueada' ? (
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={() => handleAccountAction('Bloquear', 'Bloqueada')}
+              disabled={accountInfo.status === 'Bloqueada'}
+            >
+              <Lock className="h-5 w-5" /> Bloquear Conta
+            </Button>
+          ) : (
+             <Button 
+              variant="outline" 
+              className="flex items-center gap-2 text-red-600 border-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={() => handleAccountAction('Ativar', 'Ativa')}
+            >
+              <Lock className="h-5 w-5" /> Conta Bloqueada
+            </Button>
+          )}
+
+          {accountInfo.status !== 'Suspensa' && accountInfo.status !== 'Bloqueada' ? (
+            <Button 
+              variant="outline" 
+              className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 hover:text-yellow-700 flex items-center gap-2"
+              onClick={() => handleAccountAction('Suspender', 'Suspensa')}
+              disabled={accountInfo.status === 'Suspensa' || accountInfo.status === 'Bloqueada'}
+            >
+              <UserX className="h-5 w-5" /> Suspender Conta
+            </Button>
+          ) : accountInfo.status === 'Suspensa' ? (
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 text-yellow-600 border-yellow-600 hover:bg-yellow-50 hover:text-yellow-700"
+              onClick={() => handleAccountAction('Ativar', 'Ativa')}
+            >
+              <UserX className="h-5 w-5" /> Conta Suspensa
+            </Button>
+          ) : null}
+
+          {(accountInfo.status === 'Suspensa' || accountInfo.status === 'Bloqueada') && (
+            <Button 
+              variant="default" 
+              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+              onClick={() => handleAccountAction('Ativar', 'Ativa')}
+            >
+              <UserCheck className="h-5 w-5" /> Ativar Conta
+            </Button>
+          )}
+        </CardContent>
+        <CardFooter>
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" /> 
+                Ações de bloqueio e suspensão são críticas e devem ser usadas com cautela.
+            </p>
+        </CardFooter>
+      </Card>
 
       <Card className="shadow-xl">
         <CardHeader>
@@ -168,6 +301,30 @@ export default function RecentActivitiesPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={isActionAlertOpen} onOpenChange={setIsActionAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Ação</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem certeza que deseja {actionToConfirm?.type.toLowerCase()} esta conta?
+              {actionToConfirm?.type === 'Bloquear' && " Esta ação impedirá qualquer acesso à conta."}
+              {actionToConfirm?.type === 'Suspender' && " Esta ação limitará temporariamente o acesso à conta."}
+              {actionToConfirm?.type === 'Ativar' && " Esta ação restaurará o acesso total à conta."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setIsActionAlertOpen(false); setActionToConfirm(null); }}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmAccountAction}
+              className={actionToConfirm?.newStatus === 'Bloqueada' || actionToConfirm?.newStatus === 'Suspensa' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              Confirmar {actionToConfirm?.type}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
