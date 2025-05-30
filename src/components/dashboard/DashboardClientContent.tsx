@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, ClipboardList, CreditCard, User, Shield, ExternalLink } from "lucide-react";
+import { CalendarDays, ClipboardList, CreditCard, User, Shield, ExternalLink, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -117,14 +117,21 @@ function DashboardContentInternal() {
       description: "Suas informações foram salvas com sucesso.",
     });
   }
+  
+  const tabsGridColsClass = userRole === 'admin' ? 'md:grid-cols-6' : 'md:grid-cols-4';
 
   return (
     <>
-      <Tabs defaultValue="appointments" className="w-full">
-        <TabsList className={`grid w-full grid-cols-1 ${userRole === 'admin' ? 'md:grid-cols-5' : 'md:grid-cols-4'} mb-6`}>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className={`grid w-full ${tabsGridColsClass} mb-6`}>
           <TabsTrigger value="profile" className="flex items-center gap-2 py-3">
             <User className="h-5 w-5" /> Meu Perfil
           </TabsTrigger>
+          {userRole === 'admin' && (
+            <TabsTrigger value="registerClient" className="flex items-center gap-2 py-3">
+              <UserPlus className="h-5 w-5" /> Registrar Cliente
+            </TabsTrigger>
+          )}
           <TabsTrigger value="appointments" className="flex items-center gap-2 py-3">
             <CalendarDays className="h-5 w-5" /> {userRole === 'admin' ? 'Gerenciar Agendamentos' : 'Meus Agendamentos'}
           </TabsTrigger>
@@ -168,6 +175,28 @@ function DashboardContentInternal() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {userRole === 'admin' && (
+          <TabsContent value="registerClient">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+                  <UserPlus className="h-6 w-6" /> Registrar Novo Cliente
+                </CardTitle>
+                <CardDescription>Adicione novos clientes ao sistema da clínica.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p>Utilize esta seção para cadastrar as informações de novos pacientes.</p>
+                <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  <Link href="/area-cliente/registrar-cliente">
+                    Ir para Página de Registro
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="appointments">
           <Card className="shadow-lg">
@@ -359,4 +388,3 @@ export default function DashboardClientContent() {
     </Suspense>
   );
 }
-
