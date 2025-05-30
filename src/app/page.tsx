@@ -32,7 +32,7 @@ export default function HomePage() {
       <section className="w-full py-12 md:py-24 lg:py-32 bg-primary/10">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-headline font-bold tracking-tighter sm:text-5xl md:text-6xl text-primary">
-            Bem-vindo à ClínicaWeb
+            Bem-vindo à Clínica VidaMais
           </h1>
           <p className="mt-4 max-w-[700px] mx-auto text-foreground/80 md:text-xl">
             Sua saúde em primeiro lugar. Oferecemos atendimento de qualidade com profissionais experientes.
@@ -52,7 +52,7 @@ export default function HomePage() {
             <div>
               <Image
                 src="https://placehold.co/800x600.png"
-                alt="Sobre a ClínicaWeb"
+                alt="Sobre a Clínica VidaMais"
                 width={800}
                 height={600}
                 className="rounded-lg shadow-xl"
@@ -62,7 +62,7 @@ export default function HomePage() {
             <div className="space-y-4">
               <h2 className="text-3xl font-headline font-bold tracking-tighter text-primary">Sobre Nós</h2>
               <p className="text-foreground/80">
-                A ClínicaWeb é dedicada a fornecer cuidados de saúde excepcionais em um ambiente acolhedor e moderno. Nossa equipe de especialistas está comprometida com o seu bem-estar, utilizando as mais recentes tecnologias e abordagens médicas.
+                A Clínica VidaMais é dedicada a fornecer cuidados de saúde excepcionais em um ambiente acolhedor e moderno. Nossa equipe de especialistas está comprometida com o seu bem-estar, utilizando as mais recentes tecnologias e abordagens médicas.
               </p>
               <p className="text-foreground/80">
                 Valorizamos a relação médico-paciente e buscamos oferecer um atendimento personalizado, focado nas suas necessidades individuais.

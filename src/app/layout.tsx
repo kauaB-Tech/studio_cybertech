@@ -5,7 +5,7 @@ import Footer from '@/components/layout/Footer';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'ClínicaWeb',
+  title: 'Clínica VidaMais',
   description: 'Plataforma completa para gestão de clínicas.',
 };
 

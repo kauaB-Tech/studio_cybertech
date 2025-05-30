@@ -15,7 +15,7 @@ export default function Header() {
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
           <Stethoscope className="h-8 w-8" />
-          <h1 className="text-2xl font-headline font-bold">ClínicaWeb</h1>
+          <h1 className="text-2xl font-headline font-bold">Clínica VidaMais</h1>
         </Link>
         
         <nav className="hidden md:flex gap-4">
@@ -39,7 +39,7 @@ export default function Header() {
               <nav className="flex flex-col gap-4 mt-8">
               <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-4">
                 <Stethoscope className="h-7 w-7" />
-                <h1 className="text-xl font-headline font-bold">ClínicaWeb</h1>
+                <h1 className="text-xl font-headline font-bold">Clínica VidaMais</h1>
               </Link>
                 {navItems.map((item) => (
                   <Button key={item.label} variant="ghost" asChild className="w-full justify-start">

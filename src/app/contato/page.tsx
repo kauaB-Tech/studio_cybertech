@@ -31,7 +31,7 @@ export default function ContactPage() {
               <Mail className="h-8 w-8 text-accent flex-shrink-0" />
               <div>
                 <h3 className="font-semibold">Email</h3>
-                <p className="text-foreground/80">contato@clinicaweb.com</p>
+                <p className="text-foreground/80">contato@clinicavidamais.com</p>
               </div>
             </div>
             <div>
