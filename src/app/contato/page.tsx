@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, MapPin, Phone } from 'lucide-react';
-import Image from 'next/image';
 
 export default function ContactPage() {
   return (
@@ -8,7 +7,7 @@ export default function ContactPage() {
       <h1 className="text-4xl font-headline font-bold text-center mb-12 text-primary">
         Entre em Contato
       </h1>
-      <div className="grid md:grid-cols-2 gap-12 items-start">
+      <div className="grid md:grid-cols-1 gap-12 items-start"> {/* Updated to md:grid-cols-1 as the image is removed */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="font-headline text-2xl text-primary">Nossas Informações</CardTitle>
@@ -43,16 +42,7 @@ export default function ContactPage() {
           </CardContent>
         </Card>
         
-        <div>
-          <Image 
-            src="https://placehold.co/800x600.png" 
-            alt="Localização da clínica"
-            width={800}
-            height={600}
-            className="rounded-lg shadow-xl object-cover w-full h-auto md:h-[480px]"
-            data-ai-hint="clinic exterior"
-          />
-        </div>
+        {/* The Image component and its container div have been removed */}
       </div>
     </div>
   );
