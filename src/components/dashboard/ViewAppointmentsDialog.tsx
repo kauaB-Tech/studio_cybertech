@@ -95,13 +95,6 @@ export default function ViewAppointmentsDialog({
     setAppointmentToCancelId(null);
   };
   
-  const handleViewDetailsAction = (appointmentId: string) => {
-    toast({
-        title: "Funcionalidade em Desenvolvimento",
-        description: `A funcionalidade "Ver Detalhes" (${appointmentId}) ainda não foi implementada.`,
-    });
-  };
-
   const handleSaveAppointment = (data: NewAppointmentPayload, editingId?: string) => {
     if (editingId) {
       setAppointments(prevAppointments =>
@@ -113,8 +106,6 @@ export default function ViewAppointmentsDialog({
                 specialty: data.specialty, 
                 doctor: data.doctor, 
                 notes: data.notes,
-                // Manter status original ou definir um status específico para remarcação, ex: "Remarcado"
-                // Por simplicidade, vamos manter o status que ele tinha, apenas atualizando os dados.
               } 
             : appt
         )
@@ -135,11 +126,11 @@ export default function ViewAppointmentsDialog({
         description: "Seu novo agendamento foi adicionado à lista.",
       });
     }
-    setEditingAppointmentData(null); // Limpar após salvar
+    setEditingAppointmentData(null); 
   };
 
   const openCreateAppointmentDialog = () => {
-    setEditingAppointmentData(null); // Garantir que não está em modo de edição
+    setEditingAppointmentData(null); 
     setIsCreateAppointmentOpen(true);
   }
 
@@ -191,9 +182,6 @@ export default function ViewAppointmentsDialog({
                           <Button variant="destructive" size="sm" onClick={() => promptCancelAppointment(appt.id)}>Cancelar</Button>
                         </>
                       )}
-                       {appt.status === "Realizado" && (
-                          <Button variant="outline" size="sm" onClick={() => handleViewDetailsAction(appt.id)}>Detalhes</Button>
-                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -217,7 +205,7 @@ export default function ViewAppointmentsDialog({
         onOpenChange={(open) => {
             setIsCreateAppointmentOpen(open);
             if (!open) {
-              setEditingAppointmentData(null); // Resetar modo de edição ao fechar
+              setEditingAppointmentData(null); 
             }
         }}
         onSaveAppointment={handleSaveAppointment}
