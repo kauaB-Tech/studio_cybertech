@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import type { Dispatch, SetStateAction } from "react";
 import { useToast } from "@/hooks/use-toast";
-import CreateAppointmentDialog from "./CreateAppointmentDialog"; // Novo import
+import CreateAppointmentDialog, { type NewAppointmentPayload } from "./CreateAppointmentDialog";
 import { PlusCircle } from "lucide-react";
 
 interface ViewAppointmentsDialogProps {
@@ -30,12 +30,22 @@ interface ViewAppointmentsDialogProps {
   onOpenChange: Dispatch<SetStateAction<boolean>>;
 }
 
-const mockAppointments = [
-  { id: "1", date: "2024-12-25", time: "10:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Confirmado" },
+export interface Appointment {
+  id: string;
+  date: string; // Formato YYYY-MM-DD
+  time: string;
+  doctor: string;
+  specialty: string;
+  status: string;
+  notes?: string;
+}
+
+const initialMockAppointments: Appointment[] = [
+  { id: "1", date: "2024-12-25", time: "10:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Confirmado", notes: "Paciente com histórico de pressão alta." },
   { id: "2", date: "2025-01-10", time: "14:30", doctor: "Dra. Modelo", specialty: "Cardiologia", status: "Agendado" },
-  { id: "3", date: "2024-11-20", time: "09:00", doctor: "Dr. Teste", specialty: "Ortopedia", status: "Realizado" },
+  { id: "3", date: "2024-11-20", time: "09:00", doctor: "Dr. Teste", specialty: "Ortopedia", status: "Realizado", notes: "Raio-X coluna." },
   { id: "4", date: "2024-10-15", time: "16:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Cancelado" },
-  { id: "5", date: "2025-02-01", time: "11:00", doctor: "Dra. Nova", specialty: "Dermatologia", status: "Agendado" },
+  { id: "5", date: "2025-02-01", time: "11:00", doctor: "Dra. Nova", specialty: "Dermatologia", status: "Agendado", notes: "Verificar mancha na pele." },
 ];
 
 export default function ViewAppointmentsDialog({ 
@@ -43,6 +53,7 @@ export default function ViewAppointmentsDialog({
   onOpenChange 
 }: ViewAppointmentsDialogProps) {
   const { toast } = useToast();
+  const [appointments, setAppointments] = useState<Appointment[]>(initialMockAppointments);
   const [isCreateAppointmentOpen, setIsCreateAppointmentOpen] = useState(false);
 
   const handleAction = (actionName: string, appointmentId: string) => {
@@ -52,18 +63,23 @@ export default function ViewAppointmentsDialog({
     });
   };
 
-  const handleAppointmentCreated = () => {
-    // No futuro, aqui você poderia recarregar a lista de agendamentos
+  const handleAppointmentCreated = (data: NewAppointmentPayload) => {
+    const newAppointment: Appointment = {
+      ...data,
+      id: Date.now().toString(), // Gera um ID simples para o novo agendamento
+      status: "Agendado", // Status padrão para novos agendamentos
+    };
+    setAppointments(prevAppointments => [newAppointment, ...prevAppointments]); // Adiciona no início da lista
     toast({
       title: "Agendamento Criado!",
-      description: "Seu novo agendamento foi salvo (simulação).",
+      description: "Seu novo agendamento foi adicionado à lista.",
     });
   };
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
+        <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl"> {/* Increased max width */}
           <DialogHeader>
             <DialogTitle>Meus Agendamentos</DialogTitle>
             <DialogDescription>
@@ -78,17 +94,19 @@ export default function ViewAppointmentsDialog({
                   <TableHead>Hora</TableHead>
                   <TableHead>Profissional</TableHead>
                   <TableHead>Especialidade</TableHead>
+                  <TableHead>Observações</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockAppointments.map((appt) => (
+                {appointments.map((appt) => (
                   <TableRow key={appt.id}>
                     <TableCell>{new Date(appt.date + 'T00:00:00').toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>{appt.time}</TableCell>
                     <TableCell>{appt.doctor}</TableCell>
                     <TableCell>{appt.specialty}</TableCell>
+                    <TableCell className="max-w-[200px] truncate" title={appt.notes}>{appt.notes || '-'}</TableCell>
                     <TableCell>
                       <span 
                         className={`px-2 py-1 text-xs font-semibold rounded-full

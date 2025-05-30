@@ -49,10 +49,18 @@ const appointmentFormSchema = z.object({
 
 type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
 
+export interface NewAppointmentPayload {
+  date: string; // Data formatada como string YYYY-MM-DD
+  time: string;
+  specialty: string;
+  doctor: string;
+  notes?: string;
+}
+
 interface CreateAppointmentDialogProps {
   isOpen: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  onAppointmentCreated: () => void;
+  onAppointmentCreated: (data: NewAppointmentPayload) => void;
 }
 
 const availableTimes = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
@@ -73,16 +81,21 @@ export default function CreateAppointmentDialog({
   });
 
   function onSubmit(data: AppointmentFormValues) {
-    console.log("Novo agendamento:", data);
-    // Aqui você adicionaria a lógica para salvar o agendamento
-    onAppointmentCreated();
+    const payload: NewAppointmentPayload = {
+      date: format(data.date, "yyyy-MM-dd"), // Formatar a data para string
+      time: data.time,
+      specialty: data.specialty,
+      doctor: data.doctor,
+      notes: data.notes,
+    };
+    onAppointmentCreated(payload);
     onOpenChange(false); // Close dialog on submit
-    form.reset();
+    form.reset(); // Reset form fields
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) form.reset(); // Reset form if dialog is closed without submitting
+      if (!open) form.reset(); 
       onOpenChange(open);
     }}>
       <DialogContent className="sm:max-w-[520px]">
@@ -235,4 +248,3 @@ export default function CreateAppointmentDialog({
     </Dialog>
   );
 }
-
