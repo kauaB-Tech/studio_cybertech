@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -51,12 +52,12 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <Image
-                src="https://placehold.co/800x600.png"
-                alt="Sobre a Clínica VidaMais"
-                width={800}
-                height={600}
-                className="rounded-lg shadow-xl"
-                data-ai-hint="clinic interior"
+                src="/logo-vidamais.png" 
+                alt="Logo da Clínica VidaMais"
+                width={400} 
+                height={200} 
+                className="rounded-lg shadow-xl mx-auto" 
+                data-ai-hint="clinic logo"
               />
             </div>
             <div className="space-y-4">
@@ -104,7 +105,16 @@ export default function HomePage() {
                   data-ai-hint={service.aiHint}
                 />
                 <CardHeader>
-                  <CardTitle className="font-headline text-xl text-primary">{service.title}</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src="/logo-vidamais.png"
+                      alt="Logo Clínica VidaMais"
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 object-contain"
+                    />
+                    <CardTitle className="font-headline text-xl text-primary">{service.title}</CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <CardDescription>{service.description}</CardDescription>
