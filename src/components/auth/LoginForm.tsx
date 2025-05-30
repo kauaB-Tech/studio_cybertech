@@ -28,8 +28,8 @@ const formSchema = z.object({
 
 // Definição das credenciais
 const USER_CREDENTIALS = {
-  CLIENTE: { email: "cliente@exemplo.com", password: "senha123", role: "cliente" },
-  ADMIN: { email: "admin@exemplo.com", password: "admin123", role: "admin" },
+  CLIENTE: { email: "cliente@cybertech.com", password: "senha123", role: "cliente" },
+  ADMIN: { email: "admin@cybertech.com", password: "admin123", role: "admin" },
 };
 
 export default function LoginForm() {
@@ -53,7 +53,7 @@ export default function LoginForm() {
           title: "Login de Cliente bem-sucedido!",
           description: "Redirecionando para o painel...",
         });
-        router.push("/area-cliente/dashboard"); // Cliente não precisa do parâmetro de role ou pode ser ?role=cliente
+        router.push("/area-cliente/dashboard"); 
       } else if (values.email === USER_CREDENTIALS.ADMIN.email && values.password === USER_CREDENTIALS.ADMIN.password) {
         toast({
           title: "Login de Administrador bem-sucedido!",
@@ -89,7 +89,7 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="seuemail@exemplo.com" {...field} />
+                    <Input placeholder="seuemail@dominio.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,8 +119,8 @@ export default function LoginForm() {
           </Link>
         </div>
         <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Cliente: cliente@exemplo.com / senha123</p>
-            <p>Admin: admin@exemplo.com / admin123</p>
+            <p>Cliente: cliente@cybertech.com / senha123</p>
+            <p>Admin: admin@cybertech.com / admin123</p>
         </div>
       </CardContent>
     </Card>

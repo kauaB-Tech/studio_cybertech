@@ -83,7 +83,7 @@ function DashboardContentInternal() {
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: "Nome do Paciente Exemplo",
-    email: "paciente@exemplo.com",
+    email: "paciente@cybertech.com",
     phone: "(00) 12345-6789",
     avatarUrl: "https://placehold.co/150x150.png",
   });
@@ -99,22 +99,21 @@ function DashboardContentInternal() {
       setUserProfile(prev => ({
         ...prev,
         name: "Nome do Administrador",
-        email: "admin@exemplo.com",
+        email: "admin@cybertech.com",
       }));
       setCurrentExamData(mockExamDataAdmin);
       setCurrentInvoiceData(mockLatestInvoiceAdmin);
-      setClientNextAppointmentSummary(null); // Admin doesn't need this specific summary
+      setClientNextAppointmentSummary(null); 
     } else {
       setUserRole('cliente');
       setUserProfile(prev => ({
         ...prev,
         name: "Nome do Paciente Exemplo",
-        email: "cliente@exemplo.com", // Correct email for client
+        email: "cliente@cybertech.com", 
       }));
       setCurrentExamData(mockExamDataClient);
       setCurrentInvoiceData(mockLatestInvoiceClient);
 
-      // Find next appointment for client
       const now = new Date();
       const clientAppointments = initialMockAppointments
         .filter(appt => appt.patientName === "Cliente Logado" && (appt.status === "Agendado" || appt.status === "Confirmado"))
@@ -247,7 +246,7 @@ function DashboardContentInternal() {
                   </>
                 ) : userRole === 'cliente' && !clientNextAppointmentSummary ? (
                     <p>Nenhum agendamento futuro encontrado.</p>
-                ) : ( // Admin view (can keep it generic or fetch specific admin relevant data)
+                ) : ( 
                   <>
                     <p>Paciente Y - Dra. Modelo - Cardiologia</p>
                     <p>Data: 28 de Dezembro de 2024, 11:00</p>
@@ -416,4 +415,3 @@ export default function DashboardClientContent() {
     </Suspense>
   );
 }
-

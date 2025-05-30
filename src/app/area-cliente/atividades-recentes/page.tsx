@@ -23,14 +23,14 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ActivityLogEntry {
   id: string;
-  timestamp: string; // ISO 8601 string for consistent parsing
+  timestamp: string; 
   event: string;
   details: string;
   ipAddress: string;
   device?: string;
   status: 'Sucesso' | 'Falha' | 'Informação';
   icon: React.ElementType;
-  accountStatusAtEvent?: UserAccountInfo['status']; // Novo campo
+  accountStatusAtEvent?: UserAccountInfo['status']; 
 }
 
 interface UserAccountInfo {
@@ -60,7 +60,6 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Mobile, Safari',
     status: 'Falha',
     icon: ShieldAlert,
-    // Nenhuma mudança de status explícita neste evento isolado
   },
   {
     id: '3',
@@ -82,7 +81,6 @@ const mockActivities: ActivityLogEntry[] = [
     device: 'Desktop, Chrome',
     status: 'Informação',
     icon: UserCog,
-    // Nenhuma mudança de status explícita
   },
   {
     id: '5',
@@ -132,9 +130,9 @@ const mockActivities: ActivityLogEntry[] = [
 export default function RecentActivitiesPage() {
   const { toast } = useToast();
   const [accountInfo, setAccountInfo] = useState<UserAccountInfo>({
-    name: "Nome do Paciente Exemplo",
-    email: "paciente@exemplo.com",
-    status: "Ativa", // Status inicial padrão
+    name: "Nome do Administrador", // Assuming this page is admin-only
+    email: "admin@cybertech.com", // Assuming this page is admin-only
+    status: "Ativa", 
   });
   const [isActionAlertOpen, setIsActionAlertOpen] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<{ type: 'Bloquear' | 'Suspender' | 'Ativar'; newStatus: UserAccountInfo['status'] } | null>(null);
@@ -233,7 +231,7 @@ export default function RecentActivitiesPage() {
           </p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/area-cliente/dashboard" className="flex items-center gap-1 self-start sm:self-auto">
+          <Link href="/area-cliente/dashboard?role=admin" className="flex items-center gap-1 self-start sm:self-auto">
             <ArrowLeft className="h-4 w-4" /> Voltar ao Painel
           </Link>
         </Button>
