@@ -2,9 +2,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, ClipboardList, CreditCard, User } from "lucide-react";
+import { CalendarDays, ClipboardList, CreditCard, User, Shield, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
@@ -68,7 +69,7 @@ export default function DashboardClientContent() {
   return (
     <>
       <Tabs defaultValue="appointments" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 mb-6">
           <TabsTrigger value="profile" className="flex items-center gap-2 py-3">
             <User className="h-5 w-5" /> Meu Perfil
           </TabsTrigger>
@@ -80,6 +81,9 @@ export default function DashboardClientContent() {
           </TabsTrigger>
           <TabsTrigger value="billing" className="flex items-center gap-2 py-3">
             <CreditCard className="h-5 w-5" /> Faturamento
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2 py-3">
+            <Shield className="h-5 w-5" /> Segurança
           </TabsTrigger>
         </TabsList>
 
@@ -188,6 +192,37 @@ export default function DashboardClientContent() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="security">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
+                <Shield className="h-6 w-6" /> Monitoramento de Segurança
+              </CardTitle>
+              <CardDescription>Acompanhe as atividades recentes e gerencie a segurança da sua conta.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>Para sua proteção, registramos atividades importantes relacionadas à sua conta. Você pode visualizar o log detalhado de atividades para verificar acessos e modificações.</p>
+              <p className="text-sm text-muted-foreground">Recomendamos verificar esta seção regularmente.</p>
+              <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90">
+                <Link href="/area-cliente/atividades-recentes">
+                  Ver Log de Atividades Detalhado
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+               <div className="mt-6 border-t pt-4">
+                <h4 className="text-lg font-semibold mb-2">Dicas de Segurança</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm text-foreground/80">
+                    <li>Use senhas fortes e únicas.</li>
+                    <li>Não compartilhe suas credenciais de login.</li>
+                    <li>Fique atento a emails ou mensagens suspeitas.</li>
+                    <li>Monitore suas atividades recentes regularmente.</li>
+                </ul>
+               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
       <EditProfileDialog 
         isOpen={isEditProfileOpen} 
