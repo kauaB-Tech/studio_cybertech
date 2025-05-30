@@ -26,32 +26,41 @@ import { Download } from "lucide-react";
 
 export interface Invoice {
   id: string;
-  issueDate: string; // Formato YYYY-MM-DD
-  dueDate: string;   // Formato YYYY-MM-DD
+  issueDate: string; 
+  dueDate: string;   
   amount: number;
   status: "Paga" | "Pendente" | "Vencida";
   description: string;
+  patientName?: string; 
 }
 
 const mockInvoices: Invoice[] = [
-  { id: "FAT-2024-001", issueDate: "2024-11-15", dueDate: "2024-12-01", amount: 150.00, status: "Paga", description: "Consulta Clínica Geral" },
-  { id: "FAT-2024-002", issueDate: "2024-12-01", dueDate: "2024-12-15", amount: 250.00, status: "Pendente", description: "Exames Laboratoriais" },
-  { id: "FAT-2023-003", issueDate: "2023-09-10", dueDate: "2023-09-25", amount: 80.00, status: "Vencida", description: "Consulta de Retorno" },
-  { id: "FAT-2023-004", issueDate: "2023-07-05", dueDate: "2023-07-20", amount: 320.00, status: "Paga", description: "Pequena Cirurgia Ambulatorial" },
-  { id: "FAT-2023-005", issueDate: "2023-05-12", dueDate: "2023-05-27", amount: 120.00, status: "Paga", description: "Consulta Cardiológica" },
+  { id: "FAT-2024-C01", issueDate: "2024-11-15", dueDate: "2024-12-01", amount: 150.00, status: "Paga", description: "Consulta Clínica Geral", patientName: "Cliente Logado" },
+  { id: "FAT-2024-C02", issueDate: "2024-12-01", dueDate: "2024-12-15", amount: 250.00, status: "Pendente", description: "Exames Laboratoriais", patientName: "Cliente Logado" },
+  { id: "FAT-2023-C03", issueDate: "2023-09-10", dueDate: "2023-09-25", amount: 80.00, status: "Vencida", description: "Consulta de Retorno", patientName: "Cliente Logado" },
+  { id: "FAT-2023-A04", issueDate: "2023-07-05", dueDate: "2023-07-20", amount: 320.00, status: "Paga", description: "Pequena Cirurgia Ambulatorial (Paciente Alfa)", patientName: "Paciente Alfa (Admin View)" },
+  { id: "FAT-2023-A05", issueDate: "2023-05-12", dueDate: "2023-05-27", amount: 120.00, status: "Paga", description: "Consulta Cardiológica (Paciente Beta)", patientName: "Paciente Beta (Admin View)" },
+  { id: "FAT-2024-A06", issueDate: "2024-11-25", dueDate: "2024-12-10", amount: 180.00, status: "Pendente", description: "Fisioterapia Sessão 1 (Paciente Gamma)", patientName: "Paciente Gamma (Admin View)" },
 ];
 
 interface ViewBillingHistoryDialogProps {
   isOpen: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
+  userRole: 'cliente' | 'admin';
 }
 
 export default function ViewBillingHistoryDialog({
   isOpen,
   onOpenChange,
+  userRole,
 }: ViewBillingHistoryDialogProps) {
   const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
+
+  const dialogTitle = userRole === 'admin' ? "Histórico de Faturas (Visão Admin)" : "Histórico de Faturas";
+  const dialogDescription = userRole === 'admin'
+    ? "Lista de todas as faturas dos pacientes."
+    : "Aqui está a lista de todas as suas faturas.";
 
   const handleDownloadPdf = (invoiceId: string) => {
     toast({
@@ -77,9 +86,9 @@ export default function ViewBillingHistoryDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
         <DialogHeader>
-          <DialogTitle>Histórico de Faturas</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Aqui está a lista de todas as suas faturas.
+            {dialogDescription}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 max-h-[60vh] overflow-y-auto">
@@ -88,6 +97,7 @@ export default function ViewBillingHistoryDialog({
               <TableHeader>
                 <TableRow>
                   <TableHead>ID da Fatura</TableHead>
+                  {userRole === 'admin' && <TableHead>Paciente</TableHead>}
                   <TableHead>Descrição</TableHead>
                   <TableHead>Data Emissão</TableHead>
                   <TableHead>Data Vencimento</TableHead>
@@ -97,9 +107,12 @@ export default function ViewBillingHistoryDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.map((invoice) => (
+                {invoices
+                  .filter(invoice => userRole === 'admin' || invoice.patientName === "Cliente Logado")
+                  .map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell>{invoice.id}</TableCell>
+                    {userRole === 'admin' && <TableCell>{invoice.patientName || "N/A"}</TableCell>}
                     <TableCell>{invoice.description}</TableCell>
                     <TableCell>{new Date(invoice.issueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>{new Date(invoice.dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</TableCell>
@@ -140,3 +153,4 @@ export default function ViewBillingHistoryDialog({
     </Dialog>
   );
 }
+

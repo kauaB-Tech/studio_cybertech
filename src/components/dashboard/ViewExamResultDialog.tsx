@@ -38,20 +38,27 @@ interface ViewExamResultDialogProps {
   isOpen: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   examResult: MockExamResult;
+  userRole: 'cliente' | 'admin';
 }
 
 export default function ViewExamResultDialog({
   isOpen,
   onOpenChange,
   examResult,
+  userRole,
 }: ViewExamResultDialogProps) {
+  const dialogTitle = userRole === 'admin' 
+    ? `Resultado do Exame (Admin): ${examResult.examName}`
+    : `Resultado do Exame: ${examResult.examName}`;
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md md:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Resultado do Exame: {examResult.examName}</DialogTitle>
+          <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
             Data do Exame: {examResult.examDate}
+            {userRole === 'admin' && " (Visão Administrativa)"}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4 max-h-[60vh] overflow-y-auto">
@@ -91,3 +98,4 @@ export default function ViewExamResultDialog({
     </Dialog>
   );
 }
+

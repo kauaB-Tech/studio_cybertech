@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useEffect, Suspense } from "react"; // Adicionado Suspense
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from 'next/navigation'; // Importado useSearchParams
+import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, ClipboardList, CreditCard, User, Shield, ExternalLink } from "lucide-react";
@@ -24,27 +24,48 @@ interface UserProfile {
   avatarUrl: string;
 }
 
-const mockExamData: MockExamResult = {
-  examName: "Hemograma Completo",
+const mockExamDataClient: MockExamResult = {
+  examName: "Hemograma Completo (Cliente)",
   examDate: "15 de Dezembro de 2024",
   results: [
     { parameter: "Hemácias", value: "4.5 milhões/µL", reference: "4.2-5.4" },
     { parameter: "Leucócitos", value: "7.500/µL", reference: "4.000-11.000" },
     { parameter: "Plaquetas", value: "250.000/µL", reference: "150.000-450.000" },
   ],
-  observations: "Valores dentro da normalidade.",
+  observations: "Valores dentro da normalidade (visão cliente).",
 };
 
-const mockLatestInvoice: Invoice = {
-  id: "FAT-2024-001",
+const mockExamDataAdmin: MockExamResult = {
+  examName: "Eletrocardiograma (Paciente Exemplo A)",
+  examDate: "18 de Dezembro de 2024",
+  results: [
+    { parameter: "Frequência Cardíaca", value: "72 bpm", reference: "60-100" },
+    { parameter: "Intervalo PR", value: "0.16s", reference: "0.12-0.20" },
+    { parameter: "Complexo QRS", value: "0.08s", reference: "<0.12" },
+  ],
+  observations: "Ritmo sinusal regular. Sem alterações significativas (visão admin).",
+};
+
+
+const mockLatestInvoiceClient: Invoice = {
+  id: "FAT-2024-C01",
   issueDate: "2024-11-15",
   dueDate: "2024-12-01",
   amount: 150.00,
   status: "Paga",
-  description: "Consulta Clínica Geral",
+  description: "Consulta Clínica Geral (Cliente)",
 };
 
-// Componente interno para usar useSearchParams, pois precisa estar dentro de <Suspense>
+const mockLatestInvoiceAdmin: Invoice = {
+  id: "FAT-2024-A05",
+  issueDate: "2024-11-20",
+  dueDate: "2024-12-05",
+  amount: 300.00,
+  status: "Pendente",
+  description: "Consulta Especializada (Paciente B)",
+};
+
+
 function DashboardContentInternal() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -62,6 +83,10 @@ function DashboardContentInternal() {
     avatarUrl: "https://placehold.co/150x150.png",
   });
 
+  const [currentExamData, setCurrentExamData] = useState<MockExamResult>(mockExamDataClient);
+  const [currentInvoiceData, setCurrentInvoiceData] = useState<Invoice>(mockLatestInvoiceClient);
+
+
   useEffect(() => {
     const roleFromQuery = searchParams.get('role');
     if (roleFromQuery === 'admin') {
@@ -71,6 +96,8 @@ function DashboardContentInternal() {
         name: "Nome do Administrador",
         email: "admin@exemplo.com",
       }));
+      setCurrentExamData(mockExamDataAdmin);
+      setCurrentInvoiceData(mockLatestInvoiceAdmin);
     } else {
       setUserRole('cliente');
       setUserProfile(prev => ({
@@ -78,6 +105,8 @@ function DashboardContentInternal() {
         name: "Nome do Paciente Exemplo",
         email: "paciente@exemplo.com",
       }));
+      setCurrentExamData(mockExamDataClient);
+      setCurrentInvoiceData(mockLatestInvoiceClient);
     }
   }, [searchParams]);
 
@@ -97,13 +126,13 @@ function DashboardContentInternal() {
             <User className="h-5 w-5" /> Meu Perfil
           </TabsTrigger>
           <TabsTrigger value="appointments" className="flex items-center gap-2 py-3">
-            <CalendarDays className="h-5 w-5" /> Agendamentos
+            <CalendarDays className="h-5 w-5" /> {userRole === 'admin' ? 'Gerenciar Agendamentos' : 'Meus Agendamentos'}
           </TabsTrigger>
           <TabsTrigger value="records" className="flex items-center gap-2 py-3">
-            <ClipboardList className="h-5 w-5" /> Prontuários
+            <ClipboardList className="h-5 w-5" /> {userRole === 'admin' ? 'Gerenciar Prontuários' : 'Meus Prontuários'}
           </TabsTrigger>
           <TabsTrigger value="billing" className="flex items-center gap-2 py-3">
-            <CreditCard className="h-5 w-5" /> Faturamento
+            <CreditCard className="h-5 w-5" /> {userRole === 'admin' ? 'Gerenciar Faturamento' : 'Faturamento'}
           </TabsTrigger>
           {userRole === 'admin' && (
             <TabsTrigger value="security" className="flex items-center gap-2 py-3">
@@ -144,23 +173,36 @@ function DashboardContentInternal() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
-                <CalendarDays className="h-6 w-6" /> Meus Agendamentos
+                <CalendarDays className="h-6 w-6" /> 
+                {userRole === 'admin' ? 'Gerenciar Agendamentos (Visão Admin)' : 'Meus Agendamentos'}
               </CardTitle>
-              <CardDescription>Visualize e gerencie seus próximos agendamentos e histórico.</CardDescription>
+              <CardDescription>
+                {userRole === 'admin' 
+                  ? 'Visualize e gerencie todos os agendamentos da clínica.' 
+                  : 'Visualize e gerencie seus próximos agendamentos e histórico.'
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>Nesta seção, você poderá ver suas consultas e exames agendados, remarcar ou cancelar conforme necessário.</p>
+              <p>
+                {userRole === 'admin'
+                  ? 'Nesta seção, você pode criar, remarcar ou cancelar agendamentos para qualquer paciente.'
+                  : 'Nesta seção, você poderá ver suas consultas e exames agendados, remarcar ou cancelar conforme necessário.'
+                }
+              </p>
               <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold">Próxima Consulta:</h4>
-                <p>Dr. Exemplo - Clínica Geral</p>
-                <p>Data: 25 de Dezembro de 2024, 10:00</p>
+                <h4 className="font-semibold">
+                  {userRole === 'admin' ? 'Próximo Agendamento (Clínica):' : 'Próxima Consulta:'}
+                </h4>
+                <p>{userRole === 'admin' ? 'Paciente Y - Dra. Modelo - Cardiologia' : 'Dr. Exemplo - Clínica Geral'}</p>
+                <p>Data: {userRole === 'admin' ? '28 de Dezembro de 2024, 11:00' : '25 de Dezembro de 2024, 10:00'}</p>
                 <p>Status: Confirmado</p>
               </div>
               <Button 
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
                 onClick={() => setIsViewAppointmentsOpen(true)}
               >
-                Ver Todos Agendamentos
+                {userRole === 'admin' ? 'Ver Todos Agendamentos (Admin)' : 'Ver Todos Agendamentos'}
               </Button>
             </CardContent>
           </Card>
@@ -170,23 +212,38 @@ function DashboardContentInternal() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
-                <ClipboardList className="h-6 w-6" /> Meus Prontuários
+                <ClipboardList className="h-6 w-6" /> 
+                {userRole === 'admin' ? 'Prontuários (Visão Admin)' : 'Meus Prontuários'}
               </CardTitle>
-              <CardDescription>Acesse seus resultados de exames e histórico médico.</CardDescription>
+              <CardDescription>
+                 {userRole === 'admin' 
+                  ? 'Acesse resultados de exames e históricos médicos dos pacientes.' 
+                  : 'Acesse seus resultados de exames e histórico médico.'
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>Tenha acesso seguro aos seus prontuários médicos, resultados de exames laboratoriais e de imagem.</p>
+              <p>
+                {userRole === 'admin'
+                  ? 'Tenha acesso seguro aos prontuários médicos e resultados de exames dos pacientes.'
+                  : 'Tenha acesso seguro aos seus prontuários médicos, resultados de exames laboratoriais e de imagem.'
+                }
+              </p>
                <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold">Último Exame:</h4>
-                <p>{mockExamData.examName}</p>
-                <p>Data: {mockExamData.examDate}</p>
-                <Button variant="link" className="p-0 h-auto" onClick={() => setIsViewExamResultOpen(true)}>Ver Resultado</Button>
+                <h4 className="font-semibold">
+                  {userRole === 'admin' ? 'Último Exame Registrado (Paciente X):' : 'Último Exame:'}
+                </h4>
+                <p>{currentExamData.examName}</p>
+                <p>Data: {currentExamData.examDate}</p>
+                <Button variant="link" className="p-0 h-auto" onClick={() => setIsViewExamResultOpen(true)}>
+                  {userRole === 'admin' ? 'Ver Resultado (Admin)' : 'Ver Resultado'}
+                </Button>
               </div>
               <Button 
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
                 onClick={() => setIsViewMedicalHistoryOpen(true)}
               >
-                Acessar Histórico Completo
+                {userRole === 'admin' ? 'Acessar Históricos (Admin)' : 'Acessar Histórico Completo'}
               </Button>
             </CardContent>
           </Card>
@@ -196,23 +253,36 @@ function DashboardContentInternal() {
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="font-headline text-2xl text-primary flex items-center gap-2">
-                <CreditCard className="h-6 w-6" /> Faturamento e Pagamentos
+                <CreditCard className="h-6 w-6" /> 
+                {userRole === 'admin' ? 'Faturamento (Visão Admin)' : 'Faturamento e Pagamentos'}
               </CardTitle>
-              <CardDescription>Verifique suas faturas, histórico de pagamentos e informações financeiras.</CardDescription>
+              <CardDescription>
+                {userRole === 'admin' 
+                  ? 'Verifique faturas, histórico de pagamentos e informações financeiras dos pacientes.'
+                  : 'Verifique suas faturas, histórico de pagamentos e informações financeiras.'
+                }
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p>Acompanhe suas faturas em aberto, histórico de pagamentos e gerencie suas informações de cobrança.</p>
+              <p>
+                {userRole === 'admin'
+                  ? 'Acompanhe faturas em aberto, histórico de pagamentos e gerencie informações de cobrança dos pacientes.'
+                  : 'Acompanhe suas faturas em aberto, histórico de pagamentos e gerencie suas informações de cobrança.'
+                }
+              </p>
               <div className="border p-4 rounded-lg">
-                <h4 className="font-semibold">Última Fatura:</h4>
-                <p>Referente: {mockLatestInvoice.description}</p>
-                <p>Valor: R$ {mockLatestInvoice.amount.toFixed(2).replace('.', ',')}</p>
-                <p>Status: {mockLatestInvoice.status}</p>
+                <h4 className="font-semibold">
+                   {userRole === 'admin' ? 'Última Fatura (Paciente B):' : 'Última Fatura:'}
+                </h4>
+                <p>Referente: {currentInvoiceData.description}</p>
+                <p>Valor: R$ {currentInvoiceData.amount.toFixed(2).replace('.', ',')}</p>
+                <p>Status: {currentInvoiceData.status}</p>
               </div>
               <Button 
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
                 onClick={() => setIsViewBillingHistoryOpen(true)}
               >
-                Ver Histórico de Faturas
+                {userRole === 'admin' ? 'Ver Histórico de Faturas (Admin)' : 'Ver Histórico de Faturas'}
               </Button>
             </CardContent>
           </Card>
@@ -260,29 +330,33 @@ function DashboardContentInternal() {
       <ViewAppointmentsDialog 
         isOpen={isViewAppointmentsOpen}
         onOpenChange={setIsViewAppointmentsOpen}
+        userRole={userRole}
       />
       <ViewExamResultDialog
         isOpen={isViewExamResultOpen}
         onOpenChange={setIsViewExamResultOpen}
-        examResult={mockExamData}
+        examResult={currentExamData}
+        userRole={userRole}
       />
       <ViewMedicalHistoryDialog
         isOpen={isViewMedicalHistoryOpen}
         onOpenChange={setIsViewMedicalHistoryOpen}
+        userRole={userRole}
       />
       <ViewBillingHistoryDialog
         isOpen={isViewBillingHistoryOpen}
         onOpenChange={setIsViewBillingHistoryOpen}
+        userRole={userRole}
       />
     </>
   );
 }
 
 export default function DashboardClientContent() {
-  // Envolve DashboardContentInternal com Suspense para permitir o uso de useSearchParams
   return (
     <Suspense fallback={<div>Carregando informações do usuário...</div>}>
       <DashboardContentInternal />
     </Suspense>
   );
 }
+

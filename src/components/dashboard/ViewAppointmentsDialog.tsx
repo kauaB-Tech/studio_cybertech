@@ -38,29 +38,34 @@ import { PlusCircle } from "lucide-react";
 interface ViewAppointmentsDialogProps {
   isOpen: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
+  userRole: 'cliente' | 'admin';
 }
 
 export interface Appointment {
   id: string;
-  date: string; // Formato YYYY-MM-DD
+  date: string; 
   time: string;
   doctor: string;
   specialty: string;
   status: string;
   notes?: string;
+  patientName?: string; // Adicionado para admin
 }
 
 const initialMockAppointments: Appointment[] = [
-  { id: "1", date: "2024-12-25", time: "10:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Confirmado", notes: "Paciente com histórico de pressão alta." },
-  { id: "2", date: "2025-01-10", time: "14:30", doctor: "Dra. Modelo", specialty: "Cardiologia", status: "Agendado" },
-  { id: "3", date: "2024-11-20", time: "09:00", doctor: "Dr. Teste", specialty: "Ortopedia", status: "Realizado", notes: "Raio-X coluna." },
-  { id: "4", date: "2024-10-15", time: "16:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Cancelado" },
-  { id: "5", date: "2025-02-01", time: "11:00", doctor: "Dra. Nova", specialty: "Dermatologia", status: "Agendado", notes: "Verificar mancha na pele." },
+  { id: "1", date: "2024-12-25", time: "10:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Confirmado", notes: "Paciente com histórico de pressão alta.", patientName: "Cliente Logado" },
+  { id: "2", date: "2025-01-10", time: "14:30", doctor: "Dra. Modelo", specialty: "Cardiologia", status: "Agendado", patientName: "Cliente Logado" },
+  { id: "3", date: "2024-11-20", time: "09:00", doctor: "Dr. Teste", specialty: "Ortopedia", status: "Realizado", notes: "Raio-X coluna.", patientName: "Cliente Logado" },
+  { id: "4", date: "2024-10-15", time: "16:00", doctor: "Dr. Exemplo", specialty: "Clínica Geral", status: "Cancelado", patientName: "Cliente Logado" },
+  { id: "5", date: "2025-02-01", time: "11:00", doctor: "Dra. Nova", specialty: "Dermatologia", status: "Agendado", notes: "Verificar mancha na pele.", patientName: "Cliente Logado" },
+  { id: "6", date: "2025-01-05", time: "09:30", doctor: "Dr. House", specialty: "Clínica Geral", status: "Agendado", patientName: "Paciente Alfa (Admin View)" },
+  { id: "7", date: "2025-01-08", time: "15:00", doctor: "Dra. Grey", specialty: "Pediatria", status: "Confirmado", notes: "Consulta de rotina.", patientName: "Paciente Beta (Admin View)" },
 ];
 
 export default function ViewAppointmentsDialog({ 
   isOpen, 
-  onOpenChange 
+  onOpenChange,
+  userRole
 }: ViewAppointmentsDialogProps) {
   const { toast } = useToast();
   const [appointments, setAppointments] = useState<Appointment[]>(initialMockAppointments);
@@ -68,6 +73,11 @@ export default function ViewAppointmentsDialog({
   const [editingAppointmentData, setEditingAppointmentData] = useState<Appointment | null>(null);
   const [isCancelAlertOpen, setIsCancelAlertOpen] = useState(false);
   const [appointmentToCancelId, setAppointmentToCancelId] = useState<string | null>(null);
+
+  const dialogTitle = userRole === 'admin' ? "Gerenciar Agendamentos (Admin)" : "Meus Agendamentos";
+  const dialogDescription = userRole === 'admin' 
+    ? "Visualize e gerencie todos os agendamentos da clínica."
+    : "Aqui está a lista de todos os seus agendamentos, passados e futuros.";
 
   const handleRemarcarAction = (appointment: Appointment) => {
     setEditingAppointmentData(appointment);
@@ -106,6 +116,7 @@ export default function ViewAppointmentsDialog({
                 specialty: data.specialty, 
                 doctor: data.doctor, 
                 notes: data.notes,
+                patientName: userRole === 'admin' ? data.patientName || appt.patientName : appt.patientName,
               } 
             : appt
         )
@@ -119,6 +130,7 @@ export default function ViewAppointmentsDialog({
         ...data,
         id: Date.now().toString(), 
         status: "Agendado", 
+        patientName: userRole === 'admin' ? data.patientName || "Paciente Novo (Admin)" : "Cliente Logado",
       };
       setAppointments(prevAppointments => [newAppointment, ...prevAppointments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())); 
       toast({
@@ -139,15 +151,16 @@ export default function ViewAppointmentsDialog({
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
           <DialogHeader>
-            <DialogTitle>Meus Agendamentos</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
             <DialogDescription>
-              Aqui está a lista de todos os seus agendamentos, passados e futuros.
+              {dialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 max-h-[60vh] overflow-y-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  {userRole === 'admin' && <TableHead>Paciente</TableHead>}
                   <TableHead>Data</TableHead>
                   <TableHead>Hora</TableHead>
                   <TableHead>Profissional</TableHead>
@@ -158,8 +171,11 @@ export default function ViewAppointmentsDialog({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {appointments.map((appt) => (
+                {appointments
+                  .filter(appt => userRole === 'admin' || appt.patientName === "Cliente Logado") // Filtra para cliente
+                  .map((appt) => (
                   <TableRow key={appt.id}>
+                    {userRole === 'admin' && <TableCell>{appt.patientName || "N/A"}</TableCell>}
                     <TableCell>{new Date(appt.date + 'T00:00:00').toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>{appt.time}</TableCell>
                     <TableCell>{appt.doctor}</TableCell>
@@ -210,6 +226,7 @@ export default function ViewAppointmentsDialog({
         }}
         onSaveAppointment={handleSaveAppointment}
         editingAppointment={editingAppointmentData}
+        userRole={userRole}
       />
 
       <AlertDialog open={isCancelAlertOpen} onOpenChange={setIsCancelAlertOpen}>
@@ -229,3 +246,4 @@ export default function ViewAppointmentsDialog({
     </>
   );
 }
+

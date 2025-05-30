@@ -39,9 +39,9 @@ import { ptBR } from "date-fns/locale";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import type { Appointment } from "./ViewAppointmentsDialog"; // Import Appointment type
+import type { Appointment } from "./ViewAppointmentsDialog"; 
 
-const appointmentFormSchema = z.object({
+const appointmentFormSchemaBase = z.object({
   date: z.date({ required_error: "A data do agendamento é obrigatória." }),
   time: z.string({ required_error: "A hora do agendamento é obrigatória." }),
   specialty: z.string({ required_error: "A especialidade é obrigatória." }),
@@ -49,14 +49,22 @@ const appointmentFormSchema = z.object({
   notes: z.string().optional(),
 });
 
-type AppointmentFormValues = z.infer<typeof appointmentFormSchema>;
+const appointmentFormSchemaAdmin = appointmentFormSchemaBase.extend({
+  patientName: z.string({ required_error: "O nome do paciente é obrigatório para administradores." }),
+});
+
+type AppointmentFormValuesBase = z.infer<typeof appointmentFormSchemaBase>;
+type AppointmentFormValuesAdmin = z.infer<typeof appointmentFormSchemaAdmin>;
+type AppointmentFormValues = AppointmentFormValuesBase | AppointmentFormValuesAdmin;
+
 
 export interface NewAppointmentPayload {
-  date: string; // Data formatada como string YYYY-MM-DD
+  date: string; 
   time: string;
   specialty: string;
   doctor: string;
   notes?: string;
+  patientName?: string; // Adicionado para admin
 }
 
 interface CreateAppointmentDialogProps {
@@ -64,27 +72,34 @@ interface CreateAppointmentDialogProps {
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   onSaveAppointment: (data: NewAppointmentPayload, editingId?: string) => void;
   editingAppointment?: Appointment | null;
+  userRole: 'cliente' | 'admin';
 }
 
 const availableTimes = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
 const availableSpecialties = ["Clínica Geral", "Cardiologia", "Ortopedia", "Dermatologia", "Pediatria"];
-const availableDoctors = ["Dr. Exemplo", "Dra. Modelo", "Dr. Teste", "Dra. Nova", "Dr. House"];
+const availableDoctors = ["Dr. Exemplo", "Dra. Modelo", "Dr. Teste", "Dra. Nova", "Dr. House", "Dra. Grey"];
+const availablePatientsForAdmin = ["Paciente Alfa", "Paciente Beta", "Paciente Gamma"];
 
 
 export default function CreateAppointmentDialog({ 
   isOpen, 
   onOpenChange,
   onSaveAppointment,
-  editingAppointment
+  editingAppointment,
+  userRole
 }: CreateAppointmentDialogProps) {
+
+  const currentFormSchema = userRole === 'admin' ? appointmentFormSchemaAdmin : appointmentFormSchemaBase;
+
   const form = useForm<AppointmentFormValues>({
-    resolver: zodResolver(appointmentFormSchema),
+    resolver: zodResolver(currentFormSchema),
     defaultValues: {
         date: undefined,
         time: undefined,
         specialty: undefined,
         doctor: undefined,
         notes: "",
+        ...(userRole === 'admin' && { patientName: undefined }),
     }
   });
 
@@ -92,11 +107,12 @@ export default function CreateAppointmentDialog({
     if (isOpen) {
       if (editingAppointment) {
         form.reset({
-          date: new Date(editingAppointment.date + 'T00:00:00'), // Ajuste para fuso horário local
+          date: new Date(editingAppointment.date + 'T00:00:00'), 
           time: editingAppointment.time,
           specialty: editingAppointment.specialty,
           doctor: editingAppointment.doctor,
           notes: editingAppointment.notes || "",
+          ...(userRole === 'admin' && { patientName: editingAppointment.patientName || undefined }),
         });
       } else {
         form.reset({
@@ -105,24 +121,29 @@ export default function CreateAppointmentDialog({
           specialty: undefined,
           doctor: undefined,
           notes: "",
+          ...(userRole === 'admin' && { patientName: undefined }),
         });
       }
     }
-  }, [isOpen, editingAppointment, form]);
+  }, [isOpen, editingAppointment, form, userRole]);
 
   function onSubmit(data: AppointmentFormValues) {
     const payload: NewAppointmentPayload = {
-      date: format(data.date, "yyyy-MM-dd"),
-      time: data.time,
-      specialty: data.specialty,
-      doctor: data.doctor,
+      date: format(data.date!, "yyyy-MM-dd"),
+      time: data.time!,
+      specialty: data.specialty!,
+      doctor: data.doctor!,
       notes: data.notes,
+      ...(userRole === 'admin' && { patientName: (data as AppointmentFormValuesAdmin).patientName }),
     };
     onSaveAppointment(payload, editingAppointment ? editingAppointment.id : undefined);
     onOpenChange(false); 
   }
   
-  const dialogTitle = editingAppointment ? "Remarcar Agendamento" : "Criar Novo Agendamento";
+  const dialogTitle = editingAppointment 
+    ? (userRole === 'admin' ? "Remarcar Agendamento (Admin)" : "Remarcar Agendamento")
+    : (userRole === 'admin' ? "Criar Novo Agendamento (Admin)" : "Criar Novo Agendamento");
+
   const dialogDescription = editingAppointment 
     ? "Altere os dados abaixo para remarcar o agendamento."
     : "Preencha os dados abaixo para criar um novo agendamento.";
@@ -131,8 +152,6 @@ export default function CreateAppointmentDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        // Não resetar o form aqui, pois o useEffect já lida com isso baseado em isOpen e editingAppointment
-        // Isso previne que o form seja resetado para valores vazios brevemente antes de fechar ao editar.
       }
       onOpenChange(open);
     }}>
@@ -143,6 +162,31 @@ export default function CreateAppointmentDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            {userRole === 'admin' && (
+              <FormField
+                control={form.control}
+                name="patientName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Paciente</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value as string | undefined} defaultValue={field.value as string | undefined}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o paciente" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {availablePatientsForAdmin.map(patient => (
+                          <SelectItem key={patient} value={patient}>{patient}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="date"
@@ -160,7 +204,7 @@ export default function CreateAppointmentDialog({
                           )}
                         >
                           {field.value ? (
-                            format(field.value, "PPP", { locale: ptBR })
+                            format(field.value as Date, "PPP", { locale: ptBR })
                           ) : (
                             <span>Escolha uma data</span>
                           )}
@@ -171,7 +215,7 @@ export default function CreateAppointmentDialog({
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={field.value}
+                        selected={field.value as Date | undefined}
                         onSelect={field.onChange}
                         disabled={(date) =>
                           date < new Date(new Date().setHours(0,0,0,0)) 
@@ -192,7 +236,7 @@ export default function CreateAppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Hora</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value as string | undefined} defaultValue={field.value as string | undefined}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um horário" />
@@ -215,7 +259,7 @@ export default function CreateAppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Especialidade</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value as string | undefined} defaultValue={field.value as string | undefined}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma especialidade" />
@@ -238,7 +282,7 @@ export default function CreateAppointmentDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Profissional</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value as string | undefined} defaultValue={field.value as string | undefined}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um profissional" />
@@ -266,6 +310,7 @@ export default function CreateAppointmentDialog({
                       placeholder="Alguma informação adicional para o agendamento?"
                       className="resize-none"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -284,3 +329,4 @@ export default function CreateAppointmentDialog({
     </Dialog>
   );
 }
+
