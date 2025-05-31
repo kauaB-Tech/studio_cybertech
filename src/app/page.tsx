@@ -105,16 +105,7 @@ export default function HomePage() {
                   data-ai-hint={service.aiHint}
                 />
                 <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Image
-                      src="/logo-vidamais.png"
-                      alt="Logo Clínica VidaMais"
-                      width={32}
-                      height={32}
-                      className="h-8 w-8 object-contain"
-                    />
-                    <CardTitle className="font-headline text-xl text-primary">{service.title}</CardTitle>
-                  </div>
+                  <CardTitle className="font-headline text-xl text-primary">{service.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   <CardDescription>{service.description}</CardDescription>
