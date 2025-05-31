@@ -9,20 +9,20 @@ const services = [
   {
     title: 'Consultas Gerais',
     description: 'Atendimento médico para avaliação geral da saúde e acompanhamento.',
-    imageUrl: 'https://placehold.co/600x400.png',
-    aiHint: 'doctor consultation',
+    imageUrl: '/logo-vidamais.png',
+    aiHint: 'clinic logo',
   },
   {
     title: 'Exames Laboratoriais',
     description: 'Coleta e análise de amostras para diagnósticos precisos.',
-    imageUrl: 'https://placehold.co/600x400.png',
-    aiHint: 'lab test',
+    imageUrl: '/logo-vidamais.png',
+    aiHint: 'clinic logo',
   },
   {
     title: 'Pequenas Cirurgias',
     description: 'Procedimentos cirúrgicos de baixa complexidade realizados com segurança.',
-    imageUrl: 'https://placehold.co/600x400.png',
-    aiHint: 'medical surgery',
+    imageUrl: '/logo-vidamais.png',
+    aiHint: 'clinic logo',
   },
 ];
 
